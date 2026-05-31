@@ -469,11 +469,11 @@ export const analyticsService = {
     const historicalWants = allExpenses.filter(e => (e.category === 'Shopping' || e.category === 'Entertainment') && e.date.substring(0, 7) !== currentMonth);
     const historicalWantsAvg = historicalWants.length > 0 
       ? historicalWants.reduce((sum, e) => sum + parseFloat(e.amount), 0) / historicalWants.length 
-      : 1500; // Baseline default if empty
+      : 0;
 
     shoppingExpenses.forEach(e => {
       const amt = parseFloat(e.amount);
-      if (amt > historicalWantsAvg * 2.5) {
+      if (historicalWantsAvg > 0 && amt > historicalWantsAvg * 2.5) {
         impulseAlerts.push({
           date: e.date,
           item: e.description || e.category,
@@ -518,16 +518,20 @@ export const analyticsService = {
     // Goal Completion Prediction
     // Monthly savings velocity based on last 30 days goal contributions or actual savings rate
     const recentGoalContributions = goals.reduce((sum, g) => sum + parseFloat(g.current_amount), 0);
-    const monthlySavingVelocity = Math.max(2000, netSavings > 0 ? netSavings : 3000); // fallback to baseline
+    const monthlySavingVelocity = netSavings > 0 ? netSavings : 0;
 
     const goalCompletionPredictions = goals.map(g => {
       const remaining = Math.max(0, parseFloat(g.target_amount) - parseFloat(g.current_amount));
-      const monthsToComplete = monthlySavingVelocity > 0 ? remaining / monthlySavingVelocity : 99;
+      const monthsToComplete = monthlySavingVelocity > 0 ? remaining / monthlySavingVelocity : 0;
       
       // Calculate projected date
       const targetDate = new Date();
-      targetDate.setMonth(targetDate.getMonth() + Math.ceil(monthsToComplete));
-      const completionLabel = monthsToComplete === 0 ? "Completed" : `${Math.ceil(monthsToComplete)} months`;
+      if (monthsToComplete > 0) {
+        targetDate.setMonth(targetDate.getMonth() + Math.ceil(monthsToComplete));
+      }
+      const completionLabel = remaining === 0 
+        ? "Completed" 
+        : (monthlySavingVelocity > 0 ? `${Math.ceil(monthsToComplete)} months` : "Never (No Savings)");
 
       return {
         goalId: g.id,
@@ -598,10 +602,10 @@ export const analyticsService = {
     
     const styleTotal = needsAmt + wantsAmt + eduAmt + activeSavingsAmt;
     const styleBreakdown = {
-      needs: styleTotal > 0 ? parseFloat(((needsAmt / styleTotal) * 100).toFixed(1)) : 40,
-      wants: styleTotal > 0 ? parseFloat(((wantsAmt / styleTotal) * 100).toFixed(1)) : 30,
-      savings: styleTotal > 0 ? parseFloat(((activeSavingsAmt / styleTotal) * 100).toFixed(1)) : 20,
-      education: styleTotal > 0 ? parseFloat(((eduAmt / styleTotal) * 100).toFixed(1)) : 10
+      needs: styleTotal > 0 ? parseFloat(((needsAmt / styleTotal) * 100).toFixed(1)) : 0,
+      wants: styleTotal > 0 ? parseFloat(((wantsAmt / styleTotal) * 100).toFixed(1)) : 0,
+      savings: styleTotal > 0 ? parseFloat(((activeSavingsAmt / styleTotal) * 100).toFixed(1)) : 0,
+      education: styleTotal > 0 ? parseFloat(((eduAmt / styleTotal) * 100).toFixed(1)) : 0
     };
 
     // 10. AI INSIGHTS
