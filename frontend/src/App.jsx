@@ -180,12 +180,10 @@ export default function App() {
               </button>
             </div>
 
-            {/* Quick Demo tip (WOW feature) */}
+            {/* Quick Slate tip */}
             {isLogin && (
               <div className="mt-6 pt-4 border-t border-white/5 text-center text-[10px] text-gray-500 leading-relaxed">
-                💡 **Demo Mode Active**: Use credentials <br/>
-                <span className="text-blue-400 font-bold bg-slate-900/60 px-1 py-0.5 rounded border border-white/5">demo@finance.com</span> and password <span className="text-blue-400 font-bold bg-slate-900/60 px-1 py-0.5 rounded border border-white/5">password123</span><br/>
-                to log in with rich mock financial history seeded instantly!
+                💡 **Clean Slate Mode**: Register a new account to begin tracking your personal finances from Rs. 0.
               </div>
             )}
           </div>
