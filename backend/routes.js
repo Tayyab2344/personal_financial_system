@@ -2,6 +2,7 @@ import express from 'express';
 import * as authController from './controllers/authController.js';
 import * as financeController from './controllers/financeController.js';
 import * as chatController from './controllers/chatController.js';
+import * as analyticsController from './controllers/analyticsController.js';
 import { authMiddleware } from './middleware/auth.js';
 
 const router = express.Router();
@@ -28,6 +29,8 @@ router.get('/finance/goals/:goalId/contributions', authMiddleware, financeContro
 router.get('/finance/predictions', authMiddleware, financeController.getPredictions);
 router.get('/finance/insights', authMiddleware, financeController.getInsights);
 router.post('/finance/budget', authMiddleware, financeController.upsertBudget);
+router.get('/finance/analytics/dashboard', authMiddleware, analyticsController.getAnalyticsDashboard);
+router.post('/finance/analytics/seed', authMiddleware, analyticsController.seedMockData);
 
 // Chat Routes
 router.post('/chat/message', authMiddleware, chatController.sendMessage);

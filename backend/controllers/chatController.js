@@ -1,6 +1,7 @@
 import { db } from '../config/database.js';
 import { aiService } from '../services/aiService.js';
 import { financialEngine } from '../services/financialEngine.js';
+import { analyticsService } from '../services/analyticsService.js';
 
 export const sendMessage = async (req, res) => {
   const userId = req.user.id;
@@ -115,6 +116,50 @@ export const sendMessage = async (req, res) => {
                      `*Daily Spending Limit: Rs. ${summary.dailySpendingAllowance.toLocaleString()} / day*`;
     }
 
+    else if (intent === 'BUDGET_HEALTH') {
+      const data = await analyticsService.getAnalytics(userId);
+      const score = data.budgetIntelligence.healthScore;
+      const deductions = data.budgetIntelligence.deductions;
+      let reply = `### Budget Health Analysis:\n\n* **Overall Score:** **${score}/100**\n`;
+      if (deductions.length === 0) {
+        reply += `* **Status:** Excellent! You have a perfect budget health score with zero deductions. Keep it up! ✨`;
+      } else {
+        reply += `* **Status:** Paced. Your score has the following deductions:\n` + deductions.map(d => `  - ${d}`).join('\n') + `\n\n*Safe daily limit: Rs. ${data.budgetIntelligence.safeDailyLimit.toLocaleString()} / day.*`;
+      }
+      responseText = reply;
+    }
+
+    else if (intent === 'FINANCIAL_PERSONALITY') {
+      const data = await analyticsService.getAnalytics(userId);
+      const archetype = data.financialPersonality.archetype;
+      const desc = data.financialPersonality.archetypeDescription;
+      const breakdown = data.financialPersonality.styleBreakdown;
+      responseText = `### Financial Personality Archetype:\n\n` +
+                     `* **Archetype:** **${archetype}**\n` +
+                     `* **Description:** ${desc}\n\n` +
+                     `**Spending Style Breakdown:**\n` +
+                     `* 🍔 **Needs:** ${breakdown.needs}%\n` +
+                     `* 🎁 **Wants:** ${breakdown.wants}%\n` +
+                     `* 📈 **Savings:** ${breakdown.savings}%\n` +
+                     `* 🎓 **Education:** ${breakdown.education}%`;
+    }
+
+    else if (intent === 'DETECT_RECURRING') {
+      const data = await analyticsService.getAnalytics(userId);
+      const list = data.patternDetection.recurringSuggestions;
+      if (list.length === 0) {
+        responseText = "I haven't detected any recurring expenses (like monthly subscriptions) yet. Keep logging your transactions and I'll notify you if any patterns appear!";
+      } else {
+        let reply = `### Detected Recurring Expenses & Subscriptions:\n\n`;
+        list.forEach(rec => {
+          reply += `* **${rec.description}** (${rec.category}) - Rs. ${rec.averageAmount.toLocaleString()} around day **${rec.typicalDay}** of the month.\n`;
+        });
+        reply += `\n*Would you like to save these as monthly recurring transactions in your dashboard?*`;
+        responseText = reply;
+      }
+    }
+
+
     else if (intent === 'HELP') {
       responseText = `### Supported Chat Commands:\n\n` +
                      `* **Add Income:** 'Add income 50000 salary'\n` +
@@ -123,6 +168,9 @@ export const sendMessage = async (req, res) => {
                      `* **Daily Allowance:** 'How much can I spend today?'\n` +
                      `* **Savings Goal Status:** 'Will I achieve my savings goal?'\n` +
                      `* **Budget Summary:** 'Show budget summary'\n` +
+                     `* **Budget Health:** 'What is my budget health score?'\n` +
+                     `* **Financial Personality:** 'What is my spending personality?'\n` +
+                     `* **Recurring Bills:** 'Detect recurring bills'\n` +
                      `* **Expenses Log:** 'Show expenses this month'\n` +
                      `* **Category Breakdown:** 'Show spending by category'`;
     }

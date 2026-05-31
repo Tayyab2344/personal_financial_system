@@ -110,9 +110,16 @@ export const db = {
           category VARCHAR(100) NOT NULL,
           amount DECIMAL(12, 2) NOT NULL,
           description TEXT,
-          date DATE NOT NULL
+          date DATE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
+
+      try {
+        await client.query('ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;');
+      } catch (err) {
+        // Column may already exist
+      }
 
       await client.query(`
         CREATE TABLE IF NOT EXISTS saving_goals (
@@ -262,15 +269,16 @@ export const db = {
   },
 
   // EXPENSE OPERATIONS
-  async addExpense(userId, category, amount, description, date) {
+  async addExpense(userId, category, amount, description, date, createdAt = null) {
     const decAmount = parseFloat(amount);
     const intUserId = parseInt(userId, 10);
     const formattedDate = date ? new Date(date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    const finalCreatedAt = createdAt ? new Date(createdAt).toISOString() : new Date().toISOString();
 
     if (isPostgres) {
       const res = await pool.query(
-        'INSERT INTO expenses (user_id, category, amount, description, date) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [intUserId, category, decAmount, description || '', formattedDate]
+        'INSERT INTO expenses (user_id, category, amount, description, date, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [intUserId, category, decAmount, description || '', formattedDate, finalCreatedAt]
       );
       return res.rows[0];
     } else {
@@ -281,7 +289,8 @@ export const db = {
         category,
         amount: decAmount,
         description: description || '',
-        date: formattedDate
+        date: formattedDate,
+        created_at: finalCreatedAt
       };
       dbData.expenses.push(newExpense);
       writeJsonDb(dbData);
@@ -512,6 +521,53 @@ export const db = {
       const dbData = readJsonDb();
       const budget = dbData.budgets.find(b => b.user_id === intUserId && b.month === month);
       return budget || null;
+    }
+  },
+
+  async getBudgets(userId) {
+    const intUserId = parseInt(userId, 10);
+    if (isPostgres) {
+      const res = await pool.query('SELECT * FROM budgets WHERE user_id = $1 ORDER BY month DESC', [intUserId]);
+      return res.rows.map(r => ({ ...r, savings_target: parseFloat(r.savings_target) }));
+    } else {
+      const dbData = readJsonDb();
+      return dbData.budgets.filter(b => b.user_id === intUserId).sort((a, b) => b.month.localeCompare(a.month));
+    }
+  },
+
+  async clearUserData(userId) {
+    const intUserId = parseInt(userId, 10);
+    if (isPostgres) {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM goal_contributions WHERE goal_id IN (SELECT id FROM saving_goals WHERE user_id = $1)', [intUserId]);
+        await client.query('DELETE FROM saving_goals WHERE user_id = $1', [intUserId]);
+        await client.query('DELETE FROM expenses WHERE user_id = $1', [intUserId]);
+        await client.query('DELETE FROM incomes WHERE user_id = $1', [intUserId]);
+        await client.query('DELETE FROM budgets WHERE user_id = $1', [intUserId]);
+        await client.query('DELETE FROM chat_history WHERE user_id = $1', [intUserId]);
+        await client.query('COMMIT');
+        return true;
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    } else {
+      const dbData = readJsonDb();
+      dbData.expenses = dbData.expenses.filter(e => e.user_id !== intUserId);
+      dbData.incomes = dbData.incomes.filter(i => i.user_id !== intUserId);
+      
+      const userGoalIds = dbData.saving_goals.filter(g => g.user_id === intUserId).map(g => g.id);
+      dbData.goal_contributions = dbData.goal_contributions.filter(c => !userGoalIds.includes(c.goal_id));
+      dbData.saving_goals = dbData.saving_goals.filter(g => g.user_id !== intUserId);
+      dbData.budgets = dbData.budgets.filter(b => b.user_id !== intUserId);
+      dbData.chat_history = dbData.chat_history.filter(h => h.user_id !== intUserId);
+      
+      writeJsonDb(dbData);
+      return true;
     }
   },
 

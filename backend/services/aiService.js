@@ -60,6 +60,9 @@ The allowed intents are:
 - SHOW_EXPENSES_MONTH (no params required)
 - SHOW_SPENDING_CATEGORY (no params required)
 - BUDGET_SUMMARY (no params required)
+- BUDGET_HEALTH (no params required)
+- FINANCIAL_PERSONALITY (no params required)
+- DETECT_RECURRING (no params required)
 - CHAT (for greetings, general finance questions, or unrecognized commands. Provide a direct response in the "reply" field)
 
 You MUST respond with a single valid JSON block containing:
@@ -127,6 +130,9 @@ The allowed intents are:
 - SHOW_EXPENSES_MONTH (no params required)
 - SHOW_SPENDING_CATEGORY (no params required)
 - BUDGET_SUMMARY (no params required)
+- BUDGET_HEALTH (no params required)
+- FINANCIAL_PERSONALITY (no params required)
+- DETECT_RECURRING (no params required)
 - CHAT (for greetings, general finance questions, or unrecognized commands. Provide a direct response in the "reply" field)
 
 Respond in standard JSON:

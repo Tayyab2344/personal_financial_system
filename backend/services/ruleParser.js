@@ -102,6 +102,36 @@ export const ruleParser = {
       };
     }
 
+    // Budget Health Score
+    const budgetHealthRegex = /^\s*(?:what\s+is\s+my\s+)?budget\s+health\s*(?:score)?\s*\??$/i;
+    if (budgetHealthRegex.test(text)) {
+      return {
+        matched: true,
+        intent: 'BUDGET_HEALTH',
+        params: {}
+      };
+    }
+
+    // Financial Personality Archetype
+    const personalityRegex = /^\s*(?:what\s+is\s+my\s+)?(?:financial\s+)?personality\s*(?:profile|type)?\s*\??$/i;
+    if (personalityRegex.test(text)) {
+      return {
+        matched: true,
+        intent: 'FINANCIAL_PERSONALITY',
+        params: {}
+      };
+    }
+
+    // Recurring Expenses
+    const recurringRegex = /^\s*(?:what\s+are\s+my\s+|detect\s+)?recurring\s+(?:expenses|bills|subscriptions)\s*\??$/i;
+    if (recurringRegex.test(text)) {
+      return {
+        matched: true,
+        intent: 'DETECT_RECURRING',
+        params: {}
+      };
+    }
+
     // 9. Help Command
     const helpRegex = /^\s*(?:help|commands|menu)\s*$/i;
     if (helpRegex.test(text)) {

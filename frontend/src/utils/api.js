@@ -192,5 +192,23 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to fetch chat history');
     return data;
+  },
+
+  // ANALYTICS AND SEEDING
+  async getAnalyticsDashboard() {
+    const res = await fetch(`${API_BASE}/finance/analytics/dashboard`, { headers: getHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch financial intelligence data');
+    return data;
+  },
+
+  async seedMockData() {
+    const res = await fetch(`${API_BASE}/finance/analytics/seed`, {
+      method: 'POST',
+      headers: getHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to seed mock data');
+    return data;
   }
 };
