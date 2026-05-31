@@ -12,19 +12,31 @@ export const sendMessage = async (req, res) => {
   }
 
   try {
+    // Audit Log for incoming query
+    await db.addAuditLog(userId, 'CHAT_MESSAGE', `User sent message: "${message.substring(0, 100)}"`, req.ip);
+
     // 1. Extract intent and parameters via AI Service (Hybrid: Gemini/Grok/Rule-based Regex)
     const extraction = await aiService.extractIntent(message);
     const { intent, params, isAiMode } = extraction;
     let responseText = extraction.reply; // default to AI conversational response if present
+    let pendingAction = null;
 
-    // 2. Perform action based on intent
+    // 2. Perform action based on intent (with validations and confirmations)
     if (intent === 'ADD_INCOME') {
       const { amount, source } = params;
       if (!amount || !source) {
         responseText = "I detected that you want to add income, but I couldn't extract the amount or source. Please try like this: **'Add income 50000 salary'**";
       } else {
-        const income = await db.addIncome(userId, source, amount);
-        responseText = `Added income of **Rs. ${income.amount.toLocaleString()}** from **${income.source}** for this month!`;
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+          responseText = "I detected you want to add income, but the amount must be a positive number. Try like: **'Add income 50000 salary'**";
+        } else {
+          responseText = `I detected a request to add income:\n* **Amount:** Rs. ${parsedAmount.toLocaleString()}\n* **Source:** ${source}\n\nPlease click **Confirm** to save this transaction.`;
+          pendingAction = {
+            type: 'ADD_INCOME',
+            params: { amount: parsedAmount, source }
+          };
+        }
       }
     } 
     
@@ -33,8 +45,19 @@ export const sendMessage = async (req, res) => {
       if (!amount || !category) {
         responseText = "I detected that you want to add an expense, but I couldn't extract the amount or category. Please try like this: **'Add expense 1200 fuel'**";
       } else {
-        const expense = await db.addExpense(userId, category, amount, `Added via chatbot: ${message}`);
-        responseText = `Logged expense of **Rs. ${expense.amount.toLocaleString()}** under **${expense.category}** category.`;
+        const parsedAmount = parseFloat(amount);
+        const validCategories = ['Food', 'Fuel', 'Transport', 'Education', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other'];
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+          responseText = "I detected you want to add an expense, but the amount must be a positive number. Try like: **'Add expense 1200 fuel'**";
+        } else if (!validCategories.includes(category)) {
+          responseText = `I detected you want to add an expense, but the category **${category}** is invalid. Allowed categories are: ${validCategories.join(', ')}`;
+        } else {
+          responseText = `I detected a request to log an expense:\n* **Amount:** Rs. ${parsedAmount.toLocaleString()}\n* **Category:** ${category}\n\nPlease click **Confirm** to save this transaction.`;
+          pendingAction = {
+            type: 'ADD_EXPENSE',
+            params: { amount: parsedAmount, category }
+          };
+        }
       }
     } 
     
@@ -91,7 +114,7 @@ export const sendMessage = async (req, res) => {
         expenses.forEach(e => {
           categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
         });
-
+ 
         let breakdown = `### Spending Breakdown by Category for ${summary.month}:\n\n`;
         Object.keys(categoryTotals)
           .sort((a, b) => categoryTotals[b] - categoryTotals[a])
@@ -115,7 +138,7 @@ export const sendMessage = async (req, res) => {
                      `* **Remaining Budget:** Rs. ${summary.budgetRemaining.toLocaleString()}\n\n` +
                      `*Daily Spending Limit: Rs. ${summary.dailySpendingAllowance.toLocaleString()} / day*`;
     }
-
+ 
     else if (intent === 'BUDGET_HEALTH') {
       const data = await analyticsService.getAnalytics(userId);
       const score = data.budgetIntelligence.healthScore;
@@ -128,7 +151,7 @@ export const sendMessage = async (req, res) => {
       }
       responseText = reply;
     }
-
+ 
     else if (intent === 'FINANCIAL_PERSONALITY') {
       const data = await analyticsService.getAnalytics(userId);
       const archetype = data.financialPersonality.archetype;
@@ -143,7 +166,7 @@ export const sendMessage = async (req, res) => {
                      `* 📈 **Savings:** ${breakdown.savings}%\n` +
                      `* 🎓 **Education:** ${breakdown.education}%`;
     }
-
+ 
     else if (intent === 'DETECT_RECURRING') {
       const data = await analyticsService.getAnalytics(userId);
       const list = data.patternDetection.recurringSuggestions;
@@ -158,8 +181,7 @@ export const sendMessage = async (req, res) => {
         responseText = reply;
       }
     }
-
-
+ 
     else if (intent === 'HELP') {
       responseText = `### Supported Chat Commands:\n\n` +
                      `* **Add Income:** 'Add income 50000 salary'\n` +
@@ -174,32 +196,91 @@ export const sendMessage = async (req, res) => {
                      `* **Expenses Log:** 'Show expenses this month'\n` +
                      `* **Category Breakdown:** 'Show spending by category'`;
     }
-
+ 
     // Default conversational responses
     if (!responseText) {
       responseText = "I'm not sure how to process that. You can type **'help'** to see a list of commands I can handle, or try adding a transaction (e.g. **'Add expense 1200 fuel'**).";
     }
-
+ 
     // 3. Save Chat History
     await db.addChatHistory(userId, message, responseText);
-
+ 
     // 4. Retrieve updated chat history (limit 20) to keep client synchronized
     const chatHistory = await db.getChatHistory(userId, 20);
-
+ 
     res.json({
       message,
       response: responseText,
       intent,
       isAiMode,
+      pendingAction,
       chatHistory
     });
-
+ 
   } catch (error) {
     console.error("Chat message error:", error);
     res.status(500).json({ error: "An error occurred while processing your message." });
   }
 };
 
+export const confirmAction = async (req, res) => {
+  const userId = req.user.id;
+  const { type, params } = req.body;
+
+  if (!type || !params) {
+    return res.status(400).json({ error: "Action type and params are required." });
+  }
+
+  try {
+    let reply = "";
+    if (type === 'ADD_INCOME') {
+      const { amount, source } = params;
+      const parsedAmount = parseFloat(amount);
+      if (!source || isNaN(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ error: "Invalid income source or amount." });
+      }
+      
+      const income = await db.addIncome(userId, source, parsedAmount);
+      reply = `✅ **Confirmed:** Added income of **Rs. ${income.amount.toLocaleString()}** from **${income.source}** for this month!`;
+      await db.addAuditLog(userId, 'CONFIRM_ADD_INCOME', `Chatbot confirmed income: ${source}, amount: ${parsedAmount}`, req.ip);
+    } 
+    
+    else if (type === 'ADD_EXPENSE') {
+      const { amount, category } = params;
+      const parsedAmount = parseFloat(amount);
+      const validCategories = ['Food', 'Fuel', 'Transport', 'Education', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other'];
+      
+      if (!category || isNaN(parsedAmount) || parsedAmount <= 0 || !validCategories.includes(category)) {
+        return res.status(400).json({ error: "Invalid expense category or amount." });
+      }
+
+      const expense = await db.addExpense(userId, category, parsedAmount, `Added via chatbot with confirmation`);
+      reply = `✅ **Confirmed:** Logged expense of **Rs. ${expense.amount.toLocaleString()}** under **${expense.category}** category.`;
+      await db.addAuditLog(userId, 'CONFIRM_ADD_EXPENSE', `Chatbot confirmed expense: category ${category}, amount ${parsedAmount}`, req.ip);
+    } 
+    
+    else {
+      return res.status(400).json({ error: "Unsupported confirmation action type." });
+    }
+
+    // Save confirm response to Chat History so it stays in UI on reload
+    await db.addChatHistory(userId, `[Confirmed ${type}]`, reply);
+
+    // Retrieve updated chat history (limit 20)
+    const chatHistory = await db.getChatHistory(userId, 20);
+
+    res.json({
+      success: true,
+      response: reply,
+      chatHistory
+    });
+
+  } catch (error) {
+    console.error("Confirm action error:", error);
+    res.status(500).json({ error: "Failed to confirm and execute transaction." });
+  }
+};
+ 
 export const getHistory = async (req, res) => {
   const userId = req.user.id;
   try {

@@ -4,15 +4,19 @@ import * as financeController from './controllers/financeController.js';
 import * as chatController from './controllers/chatController.js';
 import * as analyticsController from './controllers/analyticsController.js';
 import { authMiddleware } from './middleware/auth.js';
+import { generalLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 const router = express.Router();
+
+// Apply general rate limiting to all API routes
+router.use(generalLimiter);
 
 // Health Check
 router.get('/health', (req, res) => res.json({ status: "OK", timestamp: new Date() }));
 
 // Authentication Routes
-router.post('/auth/register', authController.register);
-router.post('/auth/login', authController.login);
+router.post('/auth/register', authLimiter, authController.register);
+router.post('/auth/login', authLimiter, authController.login);
 router.get('/auth/me', authMiddleware, authController.getMe);
 
 // Finance Routes
@@ -34,6 +38,7 @@ router.post('/finance/analytics/seed', authMiddleware, analyticsController.seedM
 
 // Chat Routes
 router.post('/chat/message', authMiddleware, chatController.sendMessage);
+router.post('/chat/confirm', authMiddleware, chatController.confirmAction);
 router.get('/chat/history', authMiddleware, chatController.getHistory);
 
 export default router;

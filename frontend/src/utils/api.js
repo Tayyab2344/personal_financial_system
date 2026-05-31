@@ -187,6 +187,17 @@ export const api = {
     return data;
   },
 
+  async confirmChatAction(type, params) {
+    const res = await fetch(`${API_BASE}/chat/confirm`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ type, params })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to confirm chat action');
+    return data;
+  },
+
   async getChatHistory() {
     const res = await fetch(`${API_BASE}/chat/history`, { headers: getHeaders() });
     const data = await res.json();

@@ -94,6 +94,17 @@ export const db = {
           UNIQUE(user_id, month)
         );
       `);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          action VARCHAR(255) NOT NULL,
+          details TEXT,
+          ip_address VARCHAR(45),
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
       console.log("PostgreSQL database schemas verified/created successfully.");
     } catch (err) {
       console.error("Error creating database tables:", err);
@@ -255,9 +266,15 @@ export const db = {
     }
   },
 
-  async getGoalContributions(goalId) {
+  async getGoalContributions(userId, goalId) {
+    const intUserId = parseInt(userId, 10);
     const intGoalId = parseInt(goalId, 10);
-    const res = await pool.query('SELECT * FROM goal_contributions WHERE goal_id = $1 ORDER BY contribution_date DESC, id DESC', [intGoalId]);
+    const res = await pool.query(`
+      SELECT gc.* FROM goal_contributions gc
+      JOIN saving_goals sg ON gc.goal_id = sg.id
+      WHERE gc.goal_id = $1 AND sg.user_id = $2
+      ORDER BY gc.contribution_date DESC, gc.id DESC
+    `, [intGoalId, intUserId]);
     return res.rows.map(r => ({ ...r, amount: parseFloat(r.amount) }));
   },
 
@@ -326,5 +343,17 @@ export const db = {
       RETURNING *
     `, [intUserId, month, decTarget]);
     return { ...res.rows[0], savings_target: parseFloat(res.rows[0].savings_target) };
+  },
+
+  async addAuditLog(userId, action, details, ipAddress = null) {
+    const intUserId = userId ? parseInt(userId, 10) : null;
+    try {
+      await pool.query(
+        'INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES ($1, $2, $3, $4)',
+        [intUserId, action, details, ipAddress]
+      );
+    } catch (err) {
+      console.error("Failed to insert audit log:", err);
+    }
   }
 };

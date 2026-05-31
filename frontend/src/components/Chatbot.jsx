@@ -61,6 +61,9 @@ export default function Chatbot({ triggerRefresh, refreshCount }) {
 
     if (!textToSend) setInput('');
     
+    // Clear any active pending actions in existing messages to ensure only the latest is active
+    setMessages(prev => prev.map(m => m.pendingAction ? { ...m, pendingAction: null } : m));
+
     // Add user message to UI immediately
     const userMsg = { id: `user-${Date.now()}`, text, isBot: false };
     setMessages(prev => [...prev, userMsg]);
@@ -72,12 +75,17 @@ export default function Chatbot({ triggerRefresh, refreshCount }) {
       // Update system mode indicator
       setIsAiMode(data.isAiMode);
 
-      // Add bot response to UI
-      const botMsg = { id: `bot-${Date.now()}`, text: data.response, isBot: true };
+      // Add bot response to UI, saving pendingAction if present
+      const botMsg = { 
+        id: `bot-${Date.now()}`, 
+        text: data.response, 
+        isBot: true,
+        pendingAction: data.pendingAction 
+      };
       setMessages(prev => [...prev, botMsg]);
       
-      // Trigger dashboard updates in case transaction was added
-      if (data.intent && data.intent !== 'CHAT' && data.intent !== 'UNKNOWN') {
+      // Trigger dashboard updates ONLY if a transaction was completed immediately (no pending action)
+      if (data.intent && data.intent !== 'CHAT' && data.intent !== 'UNKNOWN' && !data.pendingAction) {
         triggerRefresh();
       }
     } catch (err) {
@@ -86,6 +94,37 @@ export default function Chatbot({ triggerRefresh, refreshCount }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConfirmAction = async (msgId, pendingAction) => {
+    setLoading(true);
+    try {
+      const data = await api.confirmChatAction(pendingAction.type, pendingAction.params);
+      
+      // Update the specific message to remove its pendingAction state
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, pendingAction: null } : m));
+      
+      // Add confirm response to chat list
+      const confirmMsg = { id: `bot-confirm-${Date.now()}`, text: data.response, isBot: true };
+      setMessages(prev => [...prev, confirmMsg]);
+      
+      // Trigger dashboard update since transaction is now saved
+      triggerRefresh();
+    } catch (err) {
+      const errorMsg = { id: `bot-err-${Date.now()}`, text: `Failed to confirm action: ${err.message}`, isBot: true, isError: true };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelAction = (msgId) => {
+    // Clear pendingAction
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, pendingAction: null } : m));
+    
+    // Add cancel text
+    const cancelMsg = { id: `bot-cancel-${Date.now()}`, text: "❌ Transaction cancelled.", isBot: true };
+    setMessages(prev => [...prev, cancelMsg]);
   };
 
   // Convert markdown-like stars **bold** and ### headers for neat bot responses
@@ -176,6 +215,25 @@ export default function Chatbot({ triggerRefresh, refreshCount }) {
                 : 'bg-blue-600/20 border-blue-500/20 text-blue-100 font-medium'
             }`}>
               {msg.isBot ? renderMessageText(msg.text) : <p className="text-xs leading-relaxed">{msg.text}</p>}
+              
+              {msg.isBot && msg.pendingAction && (
+                <div className="mt-3.5 pt-3 border-t border-white/5 flex gap-2">
+                  <button 
+                    onClick={() => handleConfirmAction(msg.id, msg.pendingAction)}
+                    disabled={loading}
+                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800/50 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-glow-emerald flex items-center gap-1 cursor-pointer"
+                  >
+                    Confirm
+                  </button>
+                  <button 
+                    onClick={() => handleCancelAction(msg.id)}
+                    disabled={loading}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:text-gray-500 text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}

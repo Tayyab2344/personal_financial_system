@@ -17,12 +17,18 @@ export const addIncome = async (req, res) => {
   const userId = req.user.id;
   const { source, amount, date } = req.body;
   
-  if (!source || !amount) {
+  if (!source || amount === undefined) {
     return res.status(400).json({ error: "Source and amount are required." });
   }
 
+  const parsedAmount = parseFloat(amount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    return res.status(400).json({ error: "Income amount must be a positive number." });
+  }
+
   try {
-    const income = await db.addIncome(userId, source, amount, date);
+    const income = await db.addIncome(userId, source, parsedAmount, date);
+    await db.addAuditLog(userId, 'ADD_INCOME', `Added income: ${source}, amount: ${parsedAmount}`, req.ip);
     res.status(201).json(income);
   } catch (error) {
     console.error("Add income error:", error);
@@ -46,12 +52,23 @@ export const addExpense = async (req, res) => {
   const userId = req.user.id;
   const { category, amount, description, date } = req.body;
 
-  if (!category || !amount) {
+  if (!category || amount === undefined) {
     return res.status(400).json({ error: "Category and amount are required." });
   }
 
+  const parsedAmount = parseFloat(amount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    return res.status(400).json({ error: "Expense amount must be a positive number." });
+  }
+
+  const validCategories = ['Food', 'Fuel', 'Transport', 'Education', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other'];
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ error: `Invalid category. Must be one of: ${validCategories.join(', ')}` });
+  }
+
   try {
-    const expense = await db.addExpense(userId, category, amount, description, date);
+    const expense = await db.addExpense(userId, category, parsedAmount, description, date);
+    await db.addAuditLog(userId, 'ADD_EXPENSE', `Added expense under ${category}: amount ${parsedAmount}`, req.ip);
     res.status(201).json(expense);
   } catch (error) {
     console.error("Add expense error:", error);
@@ -79,6 +96,7 @@ export const deleteExpense = async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Expense not found or access denied." });
     }
+    await db.addAuditLog(userId, 'DELETE_EXPENSE', `Deleted expense ID ${id}`, req.ip);
     res.json({ message: "Expense deleted successfully." });
   } catch (error) {
     console.error("Delete expense error:", error);
@@ -105,8 +123,19 @@ export const addSavingGoal = async (req, res) => {
     return res.status(400).json({ error: "Goal name, target amount, and target date are required." });
   }
 
+  const parsedTarget = parseFloat(target_amount);
+  if (isNaN(parsedTarget) || parsedTarget <= 0) {
+    return res.status(400).json({ error: "Target amount must be a positive number." });
+  }
+
+  const parsedCurrent = parseFloat(current_amount || 0);
+  if (isNaN(parsedCurrent) || parsedCurrent < 0) {
+    return res.status(400).json({ error: "Current saved amount cannot be negative." });
+  }
+
   try {
-    const goal = await db.addSavingGoal(userId, goal_name, target_amount, current_amount || 0.00, target_date);
+    const goal = await db.addSavingGoal(userId, goal_name, parsedTarget, parsedCurrent, target_date);
+    await db.addAuditLog(userId, 'ADD_SAVINGS_GOAL', `Created goal: ${goal_name}, target: ${parsedTarget}`, req.ip);
     res.status(201).json(goal);
   } catch (error) {
     console.error("Add saving goal error:", error);
@@ -118,12 +147,18 @@ export const addGoalContribution = async (req, res) => {
   const userId = req.user.id;
   const { goal_id, amount, date } = req.body;
 
-  if (!goal_id || !amount) {
+  if (!goal_id || amount === undefined) {
     return res.status(400).json({ error: "Goal ID and contribution amount are required." });
   }
 
+  const parsedAmount = parseFloat(amount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    return res.status(400).json({ error: "Contribution amount must be a positive number." });
+  }
+
   try {
-    const result = await db.addGoalContribution(userId, goal_id, amount, date);
+    const result = await db.addGoalContribution(userId, goal_id, parsedAmount, date);
+    await db.addAuditLog(userId, 'ADD_GOAL_CONTRIBUTION', `Contributed ${parsedAmount} to goal ID ${goal_id}`, req.ip);
     res.status(201).json(result);
   } catch (error) {
     console.error("Add goal contribution error:", error);
@@ -132,9 +167,10 @@ export const addGoalContribution = async (req, res) => {
 };
 
 export const getGoalContributions = async (req, res) => {
+  const userId = req.user.id;
   const { goalId } = req.params;
   try {
-    const list = await db.getGoalContributions(goalId);
+    const list = await db.getGoalContributions(userId, goalId);
     res.json(list);
   } catch (error) {
     console.error("Get contributions error:", error);
@@ -172,8 +208,14 @@ export const upsertBudget = async (req, res) => {
     return res.status(400).json({ error: "Month (YYYY-MM) and savings target are required." });
   }
 
+  const parsedTarget = parseFloat(savings_target);
+  if (isNaN(parsedTarget) || parsedTarget < 0) {
+    return res.status(400).json({ error: "Savings target must be zero or a positive number." });
+  }
+
   try {
-    const budget = await db.upsertBudget(userId, month, savings_target);
+    const budget = await db.upsertBudget(userId, month, parsedTarget);
+    await db.addAuditLog(userId, 'SET_SAVINGS_TARGET', `Set savings target for ${month}: ${parsedTarget}`, req.ip);
     res.json(budget);
   } catch (error) {
     console.error("Upsert budget error:", error);
