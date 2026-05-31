@@ -1,5 +1,4 @@
 import pg from 'pg';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -14,25 +13,7 @@ const isPostgres = !!process.env.DATABASE_URL;
 async function clearDatabase() {
   console.log("Starting database cleaning procedure...");
 
-  // 1. Clear JSON Database file
-  const jsonDbDir = path.join(__dirname, '../data');
-  const jsonDbPath = path.join(jsonDbDir, 'db.json');
-  
-  if (fs.existsSync(jsonDbPath)) {
-    const cleanSchema = {
-      users: [],
-      incomes: [],
-      expenses: [],
-      saving_goals: [],
-      goal_contributions: [],
-      chat_history: [],
-      budgets: []
-    };
-    fs.writeFileSync(jsonDbPath, JSON.stringify(cleanSchema, null, 2), 'utf8');
-    console.log("- Local JSON database (db.json) cleared.");
-  }
-
-  // 2. Clear Postgres database if configured
+  // 1. Clear Postgres database if configured
   if (isPostgres) {
     console.log("- Connecting to PostgreSQL (Neon)...");
     const pool = new pg.Pool({

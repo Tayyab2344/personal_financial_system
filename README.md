@@ -24,8 +24,7 @@ Unlike basic expense trackers, FinGPT answers decision-making questions: *How mu
 *   **Frontend**: React (Vite), Tailwind CSS v3, Recharts, Lucide Icons, Glassmorphic Glass-UI.
 *   **Backend**: Node.js, Express.js (ES Modules).
 *   **Database**:
-    *   **PostgreSQL (Neon)**: Standard relational production database.
-    *   **JSON-File Fallback (Zero Config)**: Auto-switches to local JSON storage if no Postgres URL is provided, allowing instant execution.
+    *   **PostgreSQL (Neon)**: Relational production database (Neon serverless Postgres).
 *   **Authentication**: JSON Web Token (JWT) with hashed password storage (Bcrypt).
 *   **AI Providers**: Google Gemini API & xAI Grok API.
 
@@ -80,13 +79,12 @@ Run the install command from the root directory to automatically install package
 npm run install:all
 ```
 
-### 3. Environment Setup (Optional)
-If you want to use the AI chatbot (Gemini/Grok) or a remote database (PostgreSQL), create a `.env` file in the `/backend` folder based on [backend/.env.example](file:///e:/coding/personal_financial_system/backend/.env.example):
+### 3. Environment Setup
+Create a `.env` file in the `/backend` folder based on [backend/.env.example](file:///e:/coding/personal_financial_system/backend/.env.example):
 ```env
 PORT=5000
 JWT_SECRET=your_custom_jwt_secret
 
-# Leave blank to use local fallback JSON database (backend/data/db.json)
 DATABASE_URL=your_postgres_neon_connection_string
 
 # Leave blank to use Rule-Based Regex Parser Fallback
