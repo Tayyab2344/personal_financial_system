@@ -210,8 +210,8 @@ export default function App() {
               <User className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-sm font-bold text-white truncate">{user?.name || "Member User"}</h4>
-              <p className="text-xs text-gray-400 truncate">{user?.email || "user@mail.com"}</p>
+              <h4 className="text-sm font-bold text-white truncate">{user?.name || "Tayyab Atiq"}</h4>
+              <p className="text-xs text-gray-400 truncate">{user?.email || "ranatayyab941@gmail.com"}</p>
             </div>
           </div>
 
