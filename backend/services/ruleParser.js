@@ -33,9 +33,11 @@ export const ruleParser = {
     }
 
     // 3. Affordability Check
-    // e.g. "can i afford a 5000 PKR course?", "can i afford 150000 laptop"
-    const affordRegex = /^\s*can\s+i\s+afford\s+(?:a\s+)?(\d+(?:\.\d+)?)\s*(?:pkr|rs|rupees)?\s+(.+)\??$/i;
-    match = text.match(affordRegex);
+    // e.g. "can i afford a 5000 PKR course?", "can i buy a laptop for 150000", "can i purchase a 1500 PKR game"
+    const affordRegex1 = /can\s+i\s+(?:afford|buy|purchase)\s+(?:a\s+)?(\d+(?:\.\d+)?)\s*(?:pkr|rs|rupees)?\s+(.+)/i;
+    const affordRegex2 = /can\s+i\s+(?:afford|buy|purchase)\s+(?:a\s+)?(.+)\s+for\s+(\d+(?:\.\d+)?)/i;
+    
+    match = text.match(affordRegex1);
     if (match) {
       return {
         matched: true,
@@ -43,6 +45,18 @@ export const ruleParser = {
         params: {
           amount: parseFloat(match[1]),
           item: match[2].trim().replace(/\?$/, '')
+        }
+      };
+    }
+
+    match = text.match(affordRegex2);
+    if (match) {
+      return {
+        matched: true,
+        intent: 'AFFORDABILITY_CHECK',
+        params: {
+          amount: parseFloat(match[2]),
+          item: match[1].trim().replace(/\?$/, '')
         }
       };
     }
@@ -140,6 +154,64 @@ export const ruleParser = {
         intent: 'HELP',
         params: {}
       };
+    }
+
+    // Keyword Heuristic Semantic Fallback (extremely smart natural phrasing mapping)
+    const lowerText = text.toLowerCase();
+
+    // Greetings
+    if (['hello', 'hi', 'hey', 'greetings', 'yo', 'assalamu'].some(w => lowerText.startsWith(w) || lowerText === w)) {
+      return {
+        matched: true,
+        intent: 'CHAT',
+        params: {},
+        reply: "Hello Tayyab Atiq! How can I assist you with your financial intelligence today? You can ask me about your budget, daily allowance, savings goals, or add transactions."
+      };
+    }
+
+    // Help
+    if (lowerText.includes('help') || lowerText.includes('command') || lowerText.includes('menu')) {
+      return { matched: true, intent: 'HELP', params: {} };
+    }
+
+    // Daily Allowance
+    if (lowerText.includes('allowance') || lowerText.includes('limit') || (lowerText.includes('spend') && lowerText.includes('today')) || lowerText.includes('daily')) {
+      return { matched: true, intent: 'DAILY_ALLOWANCE', params: {} };
+    }
+
+    // Savings Goals
+    if (lowerText.includes('save') || lowerText.includes('saving') || lowerText.includes('goal')) {
+      return { matched: true, intent: 'SAVINGS_GOAL_STATUS', params: {} };
+    }
+
+    // Budget Health
+    if (lowerText.includes('health') || lowerText.includes('score')) {
+      return { matched: true, intent: 'BUDGET_HEALTH', params: {} };
+    }
+
+    // Financial Personality
+    if (lowerText.includes('personality') || lowerText.includes('style') || lowerText.includes('profile')) {
+      return { matched: true, intent: 'FINANCIAL_PERSONALITY', params: {} };
+    }
+
+    // Recurring Bills
+    if (lowerText.includes('recurring') || lowerText.includes('bill') || lowerText.includes('subscription')) {
+      return { matched: true, intent: 'DETECT_RECURRING', params: {} };
+    }
+
+    // Budget Summary
+    if (lowerText.includes('budget') || lowerText.includes('summary') || lowerText.includes('status') || lowerText.includes('balance') || lowerText.includes('income')) {
+      return { matched: true, intent: 'BUDGET_SUMMARY', params: {} };
+    }
+
+    // Category Breakdown
+    if (lowerText.includes('category') || lowerText.includes('breakdown') || lowerText.includes('division')) {
+      return { matched: true, intent: 'SHOW_SPENDING_CATEGORY', params: {} };
+    }
+
+    // Expenses Month
+    if (lowerText.includes('expense') || lowerText.includes('spending') || lowerText.includes('spent')) {
+      return { matched: true, intent: 'SHOW_EXPENSES_MONTH', params: {} };
     }
 
     return {
