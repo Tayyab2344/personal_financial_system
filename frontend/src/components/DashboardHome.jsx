@@ -189,8 +189,8 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
             <TrendingUp className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase">Total Income</p>
-            <h3 className="text-xl font-bold text-white">Rs. {summary?.totalIncome?.toLocaleString()}</h3>
+            <p className="text-sm font-bold text-gray-300 uppercase tracking-wide">Total Income</p>
+            <h3 className="text-2xl font-black text-white mt-1">Rs. {summary?.totalIncome?.toLocaleString()}</h3>
           </div>
         </div>
 
@@ -200,8 +200,8 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
             <TrendingDown className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase">Expenses logged</p>
-            <h3 className="text-xl font-bold text-white">Rs. {summary?.totalExpenses?.toLocaleString()}</h3>
+            <p className="text-sm font-bold text-gray-300 uppercase tracking-wide">Expenses Logged</p>
+            <h3 className="text-2xl font-black text-white mt-1">Rs. {summary?.totalExpenses?.toLocaleString()}</h3>
           </div>
         </div>
 
@@ -211,8 +211,8 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
             <Coins className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase">Spending Budget Left</p>
-            <h3 className="text-xl font-bold text-white">Rs. {summary?.budgetRemaining?.toLocaleString()}</h3>
+            <p className="text-sm font-bold text-gray-300 uppercase tracking-wide">Spending Budget Left</p>
+            <h3 className="text-2xl font-black text-white mt-1">Rs. {summary?.budgetRemaining?.toLocaleString()}</h3>
           </div>
         </div>
 
@@ -223,10 +223,10 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
           </div>
           <div className="w-full pr-2">
             <div className="flex justify-between items-center mb-1">
-              <p className="text-xs font-semibold text-gray-400 uppercase">Goal Progress</p>
-              <span className="text-xs font-bold text-purple-400">{summary?.savingsProgress}%</span>
+              <p className="text-sm font-bold text-gray-300 uppercase tracking-wide">Goal Progress</p>
+              <span className="text-2xl font-black text-purple-400">{summary?.savingsProgress}%</span>
             </div>
-            <div className="w-full bg-slate-800 rounded-full h-1.5">
+            <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2">
               <div 
                 className="bg-purple-500 h-1.5 rounded-full shadow-glow-purple" 
                 style={{ width: `${summary?.savingsProgress || 0}%` }}

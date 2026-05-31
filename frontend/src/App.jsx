@@ -207,69 +207,69 @@ export default function App() {
           {/* User profile card */}
           <div className="p-3 bg-slate-900/50 rounded-xl border border-white/5 flex items-center gap-3">
             <div className="p-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg">
-              <User className="h-4.5 w-4.5" />
+              <User className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs font-bold text-white truncate">{user?.name || "Member User"}</h4>
-              <p className="text-[10px] text-gray-500 truncate">{user?.email || "user@mail.com"}</p>
+              <h4 className="text-sm font-bold text-white truncate">{user?.name || "Member User"}</h4>
+              <p className="text-xs text-gray-400 truncate">{user?.email || "user@mail.com"}</p>
             </div>
           </div>
 
           {/* Nav Tabs list */}
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
             <button 
               onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
                 activeTab === 'dashboard' 
                   ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400 shadow-glow-blue' 
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              <LayoutDashboard className="h-4 w-4" />
+              <LayoutDashboard className="h-4.5 w-4.5" />
               Overview Dashboard
             </button>
             <button 
               onClick={() => setActiveTab('analytics')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
                 activeTab === 'analytics' 
                   ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400 shadow-glow-blue' 
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              <PieChart className="h-4 w-4" />
+              <PieChart className="h-4.5 w-4.5" />
               Expense Analytics
             </button>
             <button 
               onClick={() => setActiveTab('savings')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
                 activeTab === 'savings' 
                   ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400 shadow-glow-blue' 
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              <PiggyBank className="h-4 w-4" />
+              <PiggyBank className="h-4.5 w-4.5" />
               Savings Goals
             </button>
             <button 
               onClick={() => setActiveTab('insights')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
                 activeTab === 'insights' 
                   ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400 shadow-glow-blue' 
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-4.5 w-4.5" />
               AI Insights
             </button>
             <button 
               onClick={() => setActiveTab('chatbot')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-bold transition-all relative ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-bold transition-all relative ${
                 activeTab === 'chatbot' 
                   ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400 shadow-glow-blue' 
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              <MessageSquare className="h-4 w-4" />
+              <MessageSquare className="h-4.5 w-4.5" />
               Conversational AI
               <span className="absolute right-3 w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></span>
             </button>
@@ -279,9 +279,9 @@ export default function App() {
         {/* Logout button */}
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 mt-8 border border-red-500/20 text-red-400 rounded-lg text-xs font-bold hover:bg-red-950/20 transition-all"
+          className="w-full flex items-center gap-3 px-4 py-2.5 mt-8 border border-red-500/20 text-red-400 rounded-lg text-sm font-bold hover:bg-red-950/20 transition-all"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4.5 w-4.5" />
           Disconnect Session
         </button>
       </aside>
