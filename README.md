@@ -1,8 +1,8 @@
-# Antigravity Finance - AI-Powered Personal Finance Assistant
+# FinGPT - AI-Powered Personal Finance Assistant
 
-Antigravity Finance is an intelligent, web-based personal finance management platform. It combines traditional budgeting metrics, interactive charts, predictive modeling, and an AI-powered conversational chatbot to help you take absolute control of your financial destiny.
+FinGPT is an intelligent, web-based personal finance management platform. It combines traditional budgeting metrics, interactive charts, predictive modeling, and an AI-powered conversational chatbot to help you take absolute control of your financial destiny.
 
-Unlike basic expense trackers, Antigravity Finance answers decision-making questions: *How much can I spend today? Can I afford this purchase? When will I reach my savings goal?*
+Unlike basic expense trackers, FinGPT answers decision-making questions: *How much can I spend today? Can I afford this purchase? When will I reach my savings goal?*
 
 ---
 

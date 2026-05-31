@@ -94,7 +94,7 @@ export default function App() {
           <div className="text-center space-y-2">
             <h1 className="text-3xl md:text-4xl font-black tracking-tight flex items-center justify-center gap-2">
               <span className="p-2.5 bg-blue-600 rounded-xl text-white shadow-glow-blue"><Activity className="h-6 w-6" /></span>
-              <span className="gradient-title">Antigravity Finance</span>
+              <span className="gradient-title">FinGPT</span>
             </h1>
             <p className="text-gray-400 text-sm">AI-Powered Personal Finance Assistant</p>
           </div>
@@ -201,7 +201,7 @@ export default function App() {
           {/* Logo banner */}
           <div className="flex items-center gap-2 pb-4 border-b border-white/5">
             <span className="p-2 bg-blue-600 rounded-lg text-white shadow-glow-blue"><Activity className="h-5 w-5 animate-pulse" /></span>
-            <span className="font-black text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Antigravity Fin</span>
+            <span className="font-black text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FinGPT</span>
           </div>
 
           {/* User profile card */}
