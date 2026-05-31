@@ -1,21 +1,20 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api } from '../../utils/api';
 import { 
   TrendingUp, 
   TrendingDown, 
-  Target, 
-  PiggyBank, 
   Coins, 
-  Calendar, 
   PlusCircle, 
-  Percent, 
-  ArrowRight,
+  PiggyBank,
   Flame,
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
 
-export default function DashboardHome({ triggerRefresh, refreshCount }) {
+export default function DashboardOverview() {
+  const [refreshCount, setRefreshCount] = useState(0);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,6 +33,10 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
   const [isUpdatingTarget, setIsUpdatingTarget] = useState(false);
 
   const [message, setMessage] = useState({ text: '', type: '' });
+
+  const triggerRefresh = () => {
+    setRefreshCount(prev => prev + 1);
+  };
 
   useEffect(() => {
     fetchSummary();
@@ -137,8 +140,8 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
 
       {/* Main Allowance banner (WOW factor) */}
       <div className="glass-card p-6 md:p-8 rounded-2xl relative overflow-hidden bg-gradient-to-br from-slate-900/60 via-blue-950/20 to-purple-950/20">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -z-10 animate-float"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -z-10 animate-float [animation-delay:2s]"></div>
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -173,7 +176,7 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
             <button 
               onClick={handleUpdateSavingsTarget}
               disabled={isUpdatingTarget || savingsTarget === summary?.savingsTarget}
-              className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-gray-500 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+              className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-gray-500 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
             >
               Update Target
             </button>
@@ -280,7 +283,7 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
             </div>
             <button 
               type="submit" 
-              className="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-bold transition-all"
+              className="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
             >
               Add Income Record
             </button>
@@ -348,7 +351,7 @@ export default function DashboardHome({ triggerRefresh, refreshCount }) {
             </div>
             <button 
               type="submit" 
-              className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all"
+              className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
             >
               Add Expense Record
             </button>

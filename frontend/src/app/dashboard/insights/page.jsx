@@ -1,11 +1,13 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api } from '../../../utils/api';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area
+  LineChart, Line
 } from 'recharts';
 import { 
-  TrendingUp, TrendingDown, Target, PiggyBank, Coins, Calendar, 
+  TrendingUp, TrendingDown, Coins, Calendar, 
   Percent, ArrowRight, Flame, CheckCircle, AlertCircle, AlertTriangle, 
   Sparkles, Gauge, RefreshCw, BarChart2, Clock, Zap, 
   ArrowUpRight, ArrowDownRight, Award, Compass, ShieldAlert, Laptop
@@ -23,7 +25,7 @@ const CATEGORY_COLORS = {
   Other: '#64748b'
 };
 
-export default function InsightsDashboard({ refreshCount }) {
+export default function InsightsPage() {
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ export default function InsightsDashboard({ refreshCount }) {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [refreshCount, localRefresh]);
+  }, [localRefresh]);
 
   const fetchAnalyticsData = async () => {
     try {
@@ -157,8 +159,8 @@ export default function InsightsDashboard({ refreshCount }) {
         <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
         <p className="font-semibold">{error}</p>
         <div className="flex justify-center gap-4">
-          <button onClick={fetchAnalyticsData} className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-all font-bold text-sm">Retry</button>
-          <button onClick={handleSeedData} className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition-all font-bold text-sm">Seed Demo Data</button>
+          <button onClick={fetchAnalyticsData} className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-all font-bold text-sm cursor-pointer">Retry</button>
+          <button onClick={handleSeedData} className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition-all font-bold text-sm cursor-pointer">Seed Demo Data</button>
         </div>
       </div>
     );
@@ -172,7 +174,6 @@ export default function InsightsDashboard({ refreshCount }) {
   const patterns = analytics?.patternDetection || { dayPatternMessage: 'No patterns', timePatternMessage: 'No patterns', categoryPatternList: [], recurringSuggestions: [] };
   const behavior = analytics?.behavioralAnalytics || { impulseAlerts: [], lifestyleCreepWarning: null, savingBehaviorSummary: 'Stable' };
   const predictions = analytics?.predictiveAnalytics || { expectedExpenses: 0, expectedSavings: 0, expectedBudgetLeft: 0, goalCompletionPredictions: [], overspendingRisk: 'Low', overspendingProbability: 0 };
-  const comparative = analytics?.comparativeAnalytics || { momChangeAmt: 0, momChangePct: 0, wowChangePct: 0, currentWeekSpend: 0, prevWeekSpend: 0 };
   const personality = analytics?.financialPersonality || { archetype: 'Balanced', archetypeDescription: 'Steady saver.', styleBreakdown: { needs: 40, wants: 30, savings: 20, education: 10 } };
   const healthStyle = getHealthScoreColor(budgetIntel.healthScore);
 
@@ -197,7 +198,7 @@ export default function InsightsDashboard({ refreshCount }) {
           <button 
             onClick={handleSeedData}
             disabled={seedLoading}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-gray-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-glow-blue"
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-gray-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-glow-blue cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${seedLoading ? 'animate-spin' : ''}`} />
             Seed Demo Vault
@@ -591,7 +592,7 @@ export default function InsightsDashboard({ refreshCount }) {
           <div className="glass-card p-6 rounded-xl space-y-4">
             <h3 className="text-sm font-bold text-white flex items-center gap-1.5 border-b border-white/5 pb-2">
               <Sparkles className="h-5 w-5 text-amber-400 animate-float" />
-              Dynamic Spending Insights & Patterns
+              Dynamic Spending Spending Insights & Patterns
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {analytics?.aiInsights.map((insight, idx) => (
@@ -681,7 +682,7 @@ export default function InsightsDashboard({ refreshCount }) {
                         <span className="font-bold text-white block">Rs. {rec.averageAmount.toLocaleString()}</span>
                         <button 
                           onClick={() => alert(`Subscribed ${rec.description} to monthly recurring list!`)} 
-                          className="px-2 py-0.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded border border-blue-500/30 text-[10px] transition-all font-bold mt-1"
+                          className="px-2 py-0.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded border border-blue-500/30 text-[10px] transition-all font-bold mt-1 cursor-pointer"
                         >
                           Add recurring?
                         </button>
@@ -850,7 +851,7 @@ export default function InsightsDashboard({ refreshCount }) {
                 </div>
                 <button 
                   type="submit" 
-                  className="w-full py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg text-xs font-bold transition-all shadow-glow-blue"
+                  className="w-full py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg text-xs font-bold transition-all shadow-glow-blue cursor-pointer"
                 >
                   Simulate Purchase Outcome
                 </button>

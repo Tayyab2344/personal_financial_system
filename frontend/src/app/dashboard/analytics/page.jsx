@@ -1,10 +1,12 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api } from '../../../utils/api';
 import { 
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
-import { Search, Filter, Trash2, Calendar, DollarSign, AlertCircle } from 'lucide-react';
+import { Search, Filter, Trash2, Calendar, AlertCircle } from 'lucide-react';
 
 const CATEGORY_COLORS = {
   Food: '#ef4444',
@@ -18,7 +20,8 @@ const CATEGORY_COLORS = {
   Other: '#64748b'
 };
 
-export default function ExpenseAnalytics({ triggerRefresh, refreshCount }) {
+export default function ExpenseAnalyticsPage() {
+  const [refreshCount, setRefreshCount] = useState(0);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,6 +29,10 @@ export default function ExpenseAnalytics({ triggerRefresh, refreshCount }) {
   // Filtering & Search
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const triggerRefresh = () => {
+    setRefreshCount(prev => prev + 1);
+  };
 
   useEffect(() => {
     fetchExpenses();
@@ -244,7 +251,7 @@ export default function ExpenseAnalytics({ triggerRefresh, refreshCount }) {
                     <td className="py-3 px-4 text-center">
                       <button 
                         onClick={() => handleDelete(item.id)}
-                        className="p-1.5 bg-red-950/20 text-red-400 border border-red-800/20 rounded hover:bg-red-900/40 transition-all"
+                        className="p-1.5 bg-red-950/20 text-red-400 border border-red-800/20 rounded hover:bg-red-900/40 transition-all cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

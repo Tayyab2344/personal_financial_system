@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
-import { Target, PiggyBank, PlusCircle, Calendar, ArrowRight, ChevronRight, CheckCircle, Sparkles, TrendingUp } from 'lucide-react';
+'use client';
 
-export default function SavingsDashboard({ triggerRefresh, refreshCount }) {
+import React, { useState, useEffect } from 'react';
+import { api } from '../../../utils/api';
+import { Target, PiggyBank, PlusCircle, Calendar, ChevronRight, CheckCircle, Sparkles } from 'lucide-react';
+
+export default function SavingsGoalsPage() {
+  const [refreshCount, setRefreshCount] = useState(0);
   const [goals, setGoals] = useState([]);
   const [contributions, setContributions] = useState({});
   const [loading, setLoading] = useState(true);
@@ -21,7 +24,10 @@ export default function SavingsDashboard({ triggerRefresh, refreshCount }) {
 
   // Selected Goal for detailed logs
   const [activeGoalId, setActiveGoalId] = useState(null);
-  const [activeContribs, setActiveContribs] = useState([]);
+
+  const triggerRefresh = () => {
+    setRefreshCount(prev => prev + 1);
+  };
 
   useEffect(() => {
     fetchGoals();
@@ -77,7 +83,7 @@ export default function SavingsDashboard({ triggerRefresh, refreshCount }) {
     e.preventDefault();
     if (!selectedGoalId || !contribAmount) return;
     try {
-      const result = await api.addGoalContribution(selectedGoalId, contribAmount, contribDate || null);
+      await api.addGoalContribution(selectedGoalId, contribAmount, contribDate || null);
       setContribAmount('');
       setContribDate('');
       triggerRefresh();
@@ -175,7 +181,7 @@ export default function SavingsDashboard({ triggerRefresh, refreshCount }) {
             </div>
             <button 
               type="submit" 
-              className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-bold transition-all"
+              className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
             >
               Create Savings Goal
             </button>
@@ -196,7 +202,9 @@ export default function SavingsDashboard({ triggerRefresh, refreshCount }) {
                 <label className="block text-xs font-semibold text-gray-400 mb-1">Select Goal</label>
                 <select 
                   value={selectedGoalId}
-                  onChange={(e) => setSelectedGoalId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedGoalId(e.target.value);
+                  }}
                   className="w-full glass-input px-3 py-2 text-sm"
                 >
                   {goals.map(g => (
@@ -228,7 +236,7 @@ export default function SavingsDashboard({ triggerRefresh, refreshCount }) {
               </div>
               <button 
                 type="submit" 
-                className="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-bold transition-all"
+                className="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
               >
                 Log Saving Contribution
               </button>
@@ -298,7 +306,7 @@ export default function SavingsDashboard({ triggerRefresh, refreshCount }) {
                   <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
                     <button 
                       onClick={() => setActiveGoalId(isSelected ? null : goal.id)}
-                      className="text-xs font-bold text-gray-400 hover:text-white flex items-center gap-1 transition-all"
+                      className="text-xs font-bold text-gray-400 hover:text-white flex items-center gap-1 transition-all cursor-pointer"
                     >
                       {isSelected ? "Hide History" : "View Contributions"} 
                       <ChevronRight className={`h-4 w-4 transform transition-all ${isSelected ? 'rotate-90' : ''}`} />
