@@ -12,7 +12,8 @@ import {
   MessageSquare, 
   LogOut, 
   User,
-  Activity
+  Activity,
+  Settings
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -50,6 +51,7 @@ export default function DashboardLayout({ children }) {
     { href: '/dashboard/savings', label: 'Savings Goals', icon: PiggyBank },
     { href: '/dashboard/insights', label: 'AI Insights', icon: Sparkles },
     { href: '/dashboard/chatbot', label: 'Conversational AI', icon: MessageSquare, hasPing: true },
+    { href: '/dashboard/settings', label: 'System Settings', icon: Settings },
   ];
 
   return (

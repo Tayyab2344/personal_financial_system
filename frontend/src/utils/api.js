@@ -221,5 +221,26 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to seed mock data');
     return data;
+  },
+
+  async changePassword(oldPassword, newPassword) {
+    const res = await fetch(`${API_BASE}/auth/change-password`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ oldPassword, newPassword })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to change password');
+    return data;
+  },
+
+  async resetData() {
+    const res = await fetch(`${API_BASE}/finance/reset`, {
+      method: 'POST',
+      headers: getHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to reset all data');
+    return data;
   }
 };
