@@ -75,6 +75,27 @@ export const api = {
     return data;
   },
 
+  async updateIncome(id, source, amount, date, account_type) {
+    const res = await fetch(`${API_BASE}/finance/income/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ source, amount: parseFloat(amount), date, account_type })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update income');
+    return data;
+  },
+
+  async deleteIncome(id) {
+    const res = await fetch(`${API_BASE}/finance/income/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete income');
+    return data;
+  },
+
   // EXPENSES
   async getExpenses(month = null) {
     const url = month ? `${API_BASE}/finance/expense?month=${month}` : `${API_BASE}/finance/expense`;
@@ -102,6 +123,17 @@ export const api = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to delete expense');
+    return data;
+  },
+
+  async updateExpense(id, category, amount, description, date, account_type) {
+    const res = await fetch(`${API_BASE}/finance/expense/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ category, amount: parseFloat(amount), description, date, account_type })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update expense');
     return data;
   },
 

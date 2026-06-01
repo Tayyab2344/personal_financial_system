@@ -13,7 +13,8 @@ import {
   LogOut, 
   User,
   Activity,
-  Settings
+  Settings,
+  Table2
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -48,6 +49,7 @@ export default function DashboardLayout({ children }) {
   const navItems = [
     { href: '/dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
     { href: '/dashboard/analytics', label: 'Expense Analytics', icon: PieChart },
+    { href: '/dashboard/ledger', label: 'Spreadsheet Ledger', icon: Table2 },
     { href: '/dashboard/savings', label: 'Savings Goals', icon: PiggyBank },
     { href: '/dashboard/insights', label: 'AI Insights', icon: Sparkles },
     { href: '/dashboard/chatbot', label: 'Conversational AI', icon: MessageSquare, hasPing: true },
