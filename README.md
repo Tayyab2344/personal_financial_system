@@ -2,6 +2,8 @@
 
 FinGPT is an intelligent, web-based personal finance management platform. It combines traditional budgeting metrics, interactive charts, predictive modeling, and an AI-powered conversational chatbot to help you take absolute control of your financial destiny.
 
+🔗 **Live Demo:** [https://fingpt.ranatayyab.dev/](https://fingpt.ranatayyab.dev/)
+
 Unlike basic expense trackers, FinGPT answers decision-making questions: *How much can I spend today? Can I afford this purchase? When will I reach my savings goal?*
 
 ---
