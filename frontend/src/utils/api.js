@@ -1,4 +1,6 @@
-const API_BASE = 'https://personal-finance-system-backend.vercel.app/api';
+const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api'
+  : 'https://personal-finance-system-backend.vercel.app/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
@@ -64,11 +66,11 @@ export const api = {
     return data;
   },
 
-  async addIncome(source, amount, date) {
+  async addIncome(source, amount, date, account_type) {
     const res = await fetch(`${API_BASE}/finance/income`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ source, amount: parseFloat(amount), date })
+      body: JSON.stringify({ source, amount: parseFloat(amount), date, account_type })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to add income');
@@ -84,11 +86,11 @@ export const api = {
     return data;
   },
 
-  async addExpense(category, amount, description, date) {
+  async addExpense(category, amount, description, date, account_type) {
     const res = await fetch(`${API_BASE}/finance/expense`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ category, amount: parseFloat(amount), description, date })
+      body: JSON.stringify({ category, amount: parseFloat(amount), description, date, account_type })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to add expense');

@@ -10,7 +10,11 @@ import {
   PiggyBank,
   Flame,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Wallet,
+  CreditCard,
+  Smartphone,
+  Landmark
 } from 'lucide-react';
 
 export default function DashboardOverview() {
@@ -28,6 +32,9 @@ export default function DashboardOverview() {
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseDate, setExpenseDate] = useState('');
+
+  const [incomeAccount, setIncomeAccount] = useState('Cash');
+  const [expenseAccount, setExpenseAccount] = useState('Cash');
   
   const [savingsTarget, setSavingsTarget] = useState(0);
   const [isUpdatingTarget, setIsUpdatingTarget] = useState(false);
@@ -60,10 +67,11 @@ export default function DashboardOverview() {
     e.preventDefault();
     if (!incomeSource || !incomeAmount) return;
     try {
-      await api.addIncome(incomeSource, incomeAmount, incomeDate || null);
+      await api.addIncome(incomeSource, incomeAmount, incomeDate || null, incomeAccount);
       setIncomeSource('');
       setIncomeAmount('');
       setIncomeDate('');
+      setIncomeAccount('Cash');
       showFeedback('Income added successfully!', 'success');
       triggerRefresh();
     } catch (err) {
@@ -75,10 +83,11 @@ export default function DashboardOverview() {
     e.preventDefault();
     if (!expenseAmount) return;
     try {
-      await api.addExpense(expenseCategory, expenseAmount, expenseDescription, expenseDate || null);
+      await api.addExpense(expenseCategory, expenseAmount, expenseDescription, expenseDate || null, expenseAccount);
       setExpenseAmount('');
       setExpenseDescription('');
       setExpenseDate('');
+      setExpenseAccount('Cash');
       showFeedback('Expense added successfully!', 'success');
       triggerRefresh();
     } catch (err) {
@@ -124,6 +133,9 @@ export default function DashboardOverview() {
     );
   }
 
+  const isDeficit = summary ? (summary.totalExpenses > summary.availableBudget) : false;
+  const deficitAmount = summary ? Math.max(0, summary.totalExpenses - summary.availableBudget) : 0;
+
   return (
     <div className="space-y-6">
       {/* Alert Notification */}
@@ -139,23 +151,45 @@ export default function DashboardOverview() {
       )}
 
       {/* Main Allowance banner (WOW factor) */}
-      <div className="glass-card p-6 md:p-8 rounded-2xl relative overflow-hidden bg-gradient-to-br from-slate-900/60 via-blue-950/20 to-purple-950/20">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -z-10 animate-float"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -z-10 animate-float [animation-delay:2s]"></div>
+      <div className={`glass-card p-6 md:p-8 rounded-2xl relative overflow-hidden transition-all duration-300 ${
+        isDeficit 
+          ? 'bg-gradient-to-br from-slate-900/60 via-red-950/20 to-orange-950/20 border-red-950/20' 
+          : 'bg-gradient-to-br from-slate-900/60 via-blue-950/20 to-purple-950/20'
+      }`}>
+        <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -z-10 animate-float ${
+          isDeficit ? 'bg-red-500/10' : 'bg-blue-500/10'
+        }`}></div>
+        <div className={`absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl -z-10 animate-float [animation-delay:2s] ${
+          isDeficit ? 'bg-orange-500/5' : 'bg-purple-500/5'
+        }`}></div>
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 w-fit">
-              <Flame className="h-3.5 w-3.5" /> Daily Allowance
-            </span>
+            {isDeficit ? (
+              <span className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 w-fit">
+                <AlertCircle className="h-3.5 w-3.5" /> Budget Deficit
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 w-fit">
+                <Flame className="h-3.5 w-3.5" /> Daily Allowance
+              </span>
+            )}
             <h1 className="text-3xl md:text-5xl font-black text-white leading-none">
-              Rs. {summary?.dailySpendingAllowance?.toLocaleString()} <span className="text-lg font-medium text-gray-400">/ day</span>
+              Rs. {Math.max(0, summary?.dailySpendingAllowance || 0).toLocaleString()} <span className="text-lg font-medium text-gray-400">/ day</span>
             </h1>
-            <p className="text-gray-400 text-sm max-w-lg">
-              This is your safe daily limit based on your remaining budget of 
-              <span className="text-white font-semibold mx-1">Rs. {summary?.budgetRemaining?.toLocaleString()}</span> 
-              and <span className="text-white font-semibold">{summary?.remainingDays} days</span> left in this month.
-            </p>
+            {isDeficit ? (
+              <p className="text-gray-400 text-sm max-w-lg">
+                You have exceeded your available spending budget by 
+                <span className="text-red-400 font-semibold mx-1">Rs. {deficitAmount.toLocaleString()}</span> 
+                with <span className="text-white font-semibold">{summary?.remainingDays} days</span> left in this month. Consider reducing non-essential expenses.
+              </p>
+            ) : (
+              <p className="text-gray-400 text-sm max-w-lg">
+                This is your safe daily limit based on your remaining budget of 
+                <span className="text-white font-semibold mx-1">Rs. {summary?.budgetRemaining?.toLocaleString()}</span> 
+                and <span className="text-white font-semibold">{summary?.remainingDays} days</span> left in this month.
+              </p>
+            )}
           </div>
           
           {/* Target adjustment slider */}
@@ -210,12 +244,20 @@ export default function DashboardOverview() {
 
         {/* Budget Remaining */}
         <div className="glass-card p-5 rounded-xl flex items-center gap-4">
-          <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20">
+          <div className={`p-3 rounded-lg border transition-all duration-300 ${
+            isDeficit 
+              ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+              : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+          }`}>
             <Coins className="h-6 w-6" />
           </div>
           <div>
             <p className="text-sm font-bold text-gray-300 uppercase tracking-wide">Spending Budget Left</p>
-            <h3 className="text-2xl font-black text-white mt-1">Rs. {summary?.budgetRemaining?.toLocaleString()}</h3>
+            <h3 className={`text-2xl font-black mt-1 transition-all duration-300 ${
+              isDeficit ? 'text-red-400' : 'text-white'
+            }`}>
+              Rs. {Math.max(0, summary?.budgetRemaining || 0).toLocaleString()}
+            </h3>
           </div>
         </div>
 
@@ -234,6 +276,68 @@ export default function DashboardOverview() {
                 className="bg-purple-500 h-1.5 rounded-full shadow-glow-purple" 
                 style={{ width: `${summary?.savingsProgress || 0}%` }}
               ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Wallet Accounts Section */}
+      <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-blue-400" /> Wallet Accounts
+            </h2>
+            <p className="text-gray-400 text-xs">Real-time balances across your payment methods</p>
+          </div>
+          <div className="px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-xl w-fit">
+            <span className="text-xs text-gray-400 font-semibold block uppercase">Total Balance</span>
+            <span className="text-xl font-black text-white">Rs. {summary?.totalBalance?.toLocaleString() || '0'}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Cash */}
+          <div className="glass-card p-4 rounded-xl border border-white/5 hover:border-amber-500/30 transition-all flex items-center gap-3">
+            <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20">
+              <Coins className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase">Cash</p>
+              <h4 className="text-lg font-black text-white mt-0.5">Rs. {summary?.accountBalances?.Cash?.toLocaleString() || '0'}</h4>
+            </div>
+          </div>
+
+          {/* EasyPaisa */}
+          <div className="glass-card p-4 rounded-xl border border-white/5 hover:border-green-500/30 transition-all flex items-center gap-3">
+            <div className="p-2.5 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase">EasyPaisa</p>
+              <h4 className="text-lg font-black text-white mt-0.5">Rs. {summary?.accountBalances?.EasyPaisa?.toLocaleString() || '0'}</h4>
+            </div>
+          </div>
+
+          {/* JazzCash */}
+          <div className="glass-card p-4 rounded-xl border border-white/5 hover:border-red-500/30 transition-all flex items-center gap-3">
+            <div className="p-2.5 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20">
+              <CreditCard className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase">JazzCash</p>
+              <h4 className="text-lg font-black text-white mt-0.5">Rs. {summary?.accountBalances?.JazzCash?.toLocaleString() || '0'}</h4>
+            </div>
+          </div>
+
+          {/* Bank */}
+          <div className="glass-card p-4 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all flex items-center gap-3">
+            <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-lg border border-purple-500/20">
+              <Landmark className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase">Bank</p>
+              <h4 className="text-lg font-black text-white mt-0.5">Rs. {summary?.accountBalances?.Bank?.toLocaleString() || '0'}</h4>
             </div>
           </div>
         </div>
@@ -272,14 +376,29 @@ export default function DashboardOverview() {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1">Date (Optional)</label>
-              <input 
-                type="date" 
-                value={incomeDate}
-                onChange={(e) => setIncomeDate(e.target.value)}
-                className="w-full glass-input px-3 py-2 text-sm text-gray-400"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Date (Optional)</label>
+                <input 
+                  type="date" 
+                  value={incomeDate}
+                  onChange={(e) => setIncomeDate(e.target.value)}
+                  className="w-full glass-input px-3 py-2 text-sm text-gray-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Deposit To</label>
+                <select 
+                  value={incomeAccount}
+                  onChange={(e) => setIncomeAccount(e.target.value)}
+                  className="w-full glass-input px-3 py-2 text-sm text-gray-400"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="EasyPaisa">EasyPaisa</option>
+                  <option value="JazzCash">JazzCash</option>
+                  <option value="Bank">Bank</option>
+                </select>
+              </div>
             </div>
             <button 
               type="submit" 
@@ -328,24 +447,37 @@ export default function DashboardOverview() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1">
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Paid From</label>
+                <select 
+                  value={expenseAccount}
+                  onChange={(e) => setExpenseAccount(e.target.value)}
+                  className="w-full glass-input px-2.5 py-2 text-sm text-gray-400"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="EasyPaisa">EasyPaisa</option>
+                  <option value="JazzCash">JazzCash</option>
+                  <option value="Bank">Bank Account</option>
+                </select>
+              </div>
+              <div className="col-span-1">
                 <label className="block text-xs font-semibold text-gray-400 mb-1">Description (Optional)</label>
                 <input 
                   type="text" 
-                  placeholder="Dinner at restaurant..." 
+                  placeholder="Dinner..." 
                   value={expenseDescription}
                   onChange={(e) => setExpenseDescription(e.target.value)}
-                  className="w-full glass-input px-3 py-2 text-sm"
+                  className="w-full glass-input px-2.5 py-2 text-sm"
                 />
               </div>
-              <div>
+              <div className="col-span-1">
                 <label className="block text-xs font-semibold text-gray-400 mb-1">Date (Optional)</label>
                 <input 
                   type="date" 
                   value={expenseDate}
                   onChange={(e) => setExpenseDate(e.target.value)}
-                  className="w-full glass-input px-3 py-2 text-sm text-gray-400"
+                  className="w-full glass-input px-2.5 py-2 text-sm text-gray-400"
                 />
               </div>
             </div>
