@@ -1,6 +1,4 @@
-const API_BASE = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:5000/api'
-  : 'https://personal-finance-system-backend.vercel.app/api';
+const API_BASE = 'https://personal-finance-system-backend.vercel.app/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
