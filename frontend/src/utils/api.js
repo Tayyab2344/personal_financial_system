@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://personal-finance-system-backend.vercel.app/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
