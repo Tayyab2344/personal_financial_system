@@ -27,9 +27,10 @@ const ACCOUNT_COLORS = {
 };
 
 export default function SpreadsheetLedgerPage() {
-  const [activeTab, setActiveTab] = useState('expenses'); // 'expenses' | 'incomes'
+  const [activeTab, setActiveTab] = useState('expenses'); // 'expenses' | 'incomes' | 'transfers'
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshCount, setRefreshCount] = useState(0);
@@ -58,12 +59,14 @@ export default function SpreadsheetLedgerPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [expenseData, incomeData] = await Promise.all([
+      const [expenseData, incomeData, transferData] = await Promise.all([
         api.getExpenses(),
-        api.getIncomes()
+        api.getIncomes(),
+        api.getTransfers()
       ]);
       setExpenses(expenseData);
       setIncomes(incomeData);
+      setTransfers(transferData);
       setError('');
     } catch (err) {
       setError(err.message || 'Failed to load ledger data.');
@@ -93,6 +96,16 @@ export default function SpreadsheetLedgerPage() {
     }
   };
 
+  const handleDeleteTransfer = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this transfer?")) return;
+    try {
+      await api.deleteTransfer(id);
+      triggerRefresh();
+    } catch (err) {
+      alert(err.message || "Failed to delete transfer.");
+    }
+  };
+
   // Start Edit Mode
   const startEditExpense = (item) => {
     setEditingId(item.id);
@@ -112,6 +125,17 @@ export default function SpreadsheetLedgerPage() {
       amount: item.amount,
       date: item.date,
       account_type: item.account_type || 'Cash'
+    });
+  };
+
+  const startEditTransfer = (item) => {
+    setEditingId(item.id);
+    setEditForm({
+      from_account: item.from_account || 'Bank',
+      to_account: item.to_account || 'Cash',
+      amount: item.amount,
+      date: item.date,
+      description: item.description || ''
     });
   };
 
@@ -149,6 +173,23 @@ export default function SpreadsheetLedgerPage() {
     }
   };
 
+  const handleSaveTransfer = async (id) => {
+    try {
+      await api.updateTransfer(
+        id,
+        editForm.from_account,
+        editForm.to_account,
+        editForm.amount,
+        editForm.date,
+        editForm.description
+      );
+      setEditingId(null);
+      triggerRefresh();
+    } catch (err) {
+      alert(err.message || "Failed to update transfer.");
+    }
+  };
+
   // Sorting helper
   const handleSort = (field) => {
     if (sortField === field) {
@@ -161,18 +202,24 @@ export default function SpreadsheetLedgerPage() {
 
   // Filter & Search Logic
   const getProcessedData = () => {
-    const list = activeTab === 'expenses' ? expenses : incomes;
+    const list = activeTab === 'expenses' ? expenses : (activeTab === 'incomes' ? incomes : transfers);
     
     let processed = list.filter(item => {
       const matchSearch = activeTab === 'expenses'
         ? (item.description?.toLowerCase().includes(search.toLowerCase()) || item.category.toLowerCase().includes(search.toLowerCase()))
-        : (item.source?.toLowerCase().includes(search.toLowerCase()) || item.account_type?.toLowerCase().includes(search.toLowerCase()));
+        : activeTab === 'incomes'
+        ? (item.source?.toLowerCase().includes(search.toLowerCase()) || item.account_type?.toLowerCase().includes(search.toLowerCase()))
+        : (item.description?.toLowerCase().includes(search.toLowerCase()) || item.from_account?.toLowerCase().includes(search.toLowerCase()) || item.to_account?.toLowerCase().includes(search.toLowerCase()));
 
       const matchCategory = activeTab === 'expenses'
         ? (filterCategory === 'All' || item.category === filterCategory)
         : true;
 
-      const matchAccount = filterAccount === 'All' || (item.account_type || 'Cash') === filterAccount;
+      const matchAccount = filterAccount === 'All'
+        ? true
+        : activeTab === 'transfers'
+        ? (item.from_account === filterAccount || item.to_account === filterAccount)
+        : (item.account_type || 'Cash') === filterAccount;
 
       return matchSearch && matchCategory && matchAccount;
     });
@@ -202,7 +249,7 @@ export default function SpreadsheetLedgerPage() {
 
   const processedData = getProcessedData();
 
-  if (loading && expenses.length === 0 && incomes.length === 0) {
+  if (loading && expenses.length === 0 && incomes.length === 0 && transfers.length === 0) {
     return (
       <div className="flex justify-center items-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -241,6 +288,16 @@ export default function SpreadsheetLedgerPage() {
           >
             <TrendingUp className="h-3.5 w-3.5" /> Incomes Log
           </button>
+          <button 
+            onClick={() => { setActiveTab('transfers'); setSearch(''); setEditingId(null); }}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'transfers' 
+                ? 'bg-blue-600 text-white shadow-glow-blue' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" /> Transfers Log
+          </button>
         </div>
       </div>
 
@@ -253,7 +310,13 @@ export default function SpreadsheetLedgerPage() {
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
               <input 
                 type="text" 
-                placeholder={activeTab === 'expenses' ? "Search category or description..." : "Search source or method..."}
+                placeholder={
+                  activeTab === 'expenses' 
+                    ? "Search category or description..." 
+                    : activeTab === 'incomes' 
+                    ? "Search source or method..." 
+                    : "Search description or account..."
+                }
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="glass-input pl-9 pr-3 py-1.8 text-xs w-full"
@@ -321,15 +384,29 @@ export default function SpreadsheetLedgerPage() {
                         Category <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
-                  ) : (
+                  ) : activeTab === 'incomes' ? (
                     <th onClick={() => handleSort('source')} className="py-3 px-4 cursor-pointer hover:text-white transition-all w-48">
                       <div className="flex items-center gap-1">
                         Income Source <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
+                  ) : (
+                    <th onClick={() => handleSort('from_account')} className="py-3 px-4 cursor-pointer hover:text-white transition-all w-44">
+                      <div className="flex items-center gap-1">
+                        From Account <ArrowUpDown className="h-3 w-3" />
+                      </div>
+                    </th>
                   )}
 
-                  {activeTab === 'expenses' && (
+                  {activeTab === 'transfers' && (
+                    <th onClick={() => handleSort('to_account')} className="py-3 px-4 cursor-pointer hover:text-white transition-all w-44">
+                      <div className="flex items-center gap-1">
+                        To Account <ArrowUpDown className="h-3 w-3" />
+                      </div>
+                    </th>
+                  )}
+
+                  {(activeTab === 'expenses' || activeTab === 'transfers') && (
                     <th onClick={() => handleSort('description')} className="py-3 px-4 cursor-pointer hover:text-white transition-all">
                       <div className="flex items-center gap-1">
                         Description <ArrowUpDown className="h-3 w-3" />
@@ -337,11 +414,13 @@ export default function SpreadsheetLedgerPage() {
                     </th>
                   )}
 
-                  <th onClick={() => handleSort('account_type')} className="py-3 px-4 cursor-pointer hover:text-white transition-all w-40">
-                    <div className="flex items-center gap-1">
-                      Account <ArrowUpDown className="h-3 w-3" />
-                    </div>
-                  </th>
+                  {activeTab !== 'transfers' && (
+                    <th onClick={() => handleSort('account_type')} className="py-3 px-4 cursor-pointer hover:text-white transition-all w-40">
+                      <div className="flex items-center gap-1">
+                        Account <ArrowUpDown className="h-3 w-3" />
+                      </div>
+                    </th>
+                  )}
 
                   <th onClick={() => handleSort('amount')} className="py-3 px-4 cursor-pointer hover:text-white transition-all text-right w-36">
                     <div className="flex items-center justify-end gap-1">
@@ -382,7 +461,7 @@ export default function SpreadsheetLedgerPage() {
                         )}
                       </td>
 
-                      {/* CATEGORY / SOURCE FIELD */}
+                      {/* CATEGORY / SOURCE / FROM ACCOUNT FIELD */}
                       <td className="py-3 px-4">
                         {isEditing ? (
                           activeTab === 'expenses' ? (
@@ -395,7 +474,7 @@ export default function SpreadsheetLedgerPage() {
                                 <option key={cat} value={cat}>{cat}</option>
                               ))}
                             </select>
-                          ) : (
+                          ) : activeTab === 'incomes' ? (
                             <input 
                               type="text" 
                               value={editForm.source} 
@@ -403,6 +482,16 @@ export default function SpreadsheetLedgerPage() {
                               className="glass-input px-2 py-1 text-xs w-full"
                               required
                             />
+                          ) : (
+                            <select 
+                              value={editForm.from_account} 
+                              onChange={(e) => setEditForm({ ...editForm, from_account: e.target.value })}
+                              className="glass-input px-2 py-1 text-xs w-full"
+                            >
+                              {Object.keys(ACCOUNT_COLORS).map(acc => (
+                                <option key={acc} value={acc}>{acc}</option>
+                              ))}
+                            </select>
                           )
                         ) : (
                           activeTab === 'expenses' ? (
@@ -416,14 +505,53 @@ export default function SpreadsheetLedgerPage() {
                             >
                               {item.category}
                             </span>
-                          ) : (
+                          ) : activeTab === 'incomes' ? (
                             <span className="text-white font-bold">{item.source}</span>
+                          ) : (
+                            <span 
+                              className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider"
+                              style={{ 
+                                backgroundColor: `${ACCOUNT_COLORS[item.from_account || 'Cash']}10`, 
+                                color: ACCOUNT_COLORS[item.from_account || 'Cash'],
+                                border: `1px solid ${ACCOUNT_COLORS[item.from_account || 'Cash']}25`
+                              }}
+                            >
+                              {item.from_account || 'Cash'}
+                            </span>
                           )
                         )}
                       </td>
 
+                      {/* TO ACCOUNT FIELD */}
+                      {activeTab === 'transfers' && (
+                        <td className="py-3 px-4">
+                          {isEditing ? (
+                            <select 
+                              value={editForm.to_account} 
+                              onChange={(e) => setEditForm({ ...editForm, to_account: e.target.value })}
+                              className="glass-input px-2 py-1 text-xs w-full"
+                            >
+                              {Object.keys(ACCOUNT_COLORS).map(acc => (
+                                <option key={acc} value={acc}>{acc}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span 
+                              className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider"
+                              style={{ 
+                                backgroundColor: `${ACCOUNT_COLORS[item.to_account || 'Cash']}10`, 
+                                color: ACCOUNT_COLORS[item.to_account || 'Cash'],
+                                border: `1px solid ${ACCOUNT_COLORS[item.to_account || 'Cash']}25`
+                              }}
+                            >
+                              {item.to_account || 'Cash'}
+                            </span>
+                          )}
+                        </td>
+                      )}
+
                       {/* DESCRIPTION FIELD */}
-                      {activeTab === 'expenses' && (
+                      {(activeTab === 'expenses' || activeTab === 'transfers') && (
                         <td className="py-3 px-4">
                           {isEditing ? (
                             <input 
@@ -431,7 +559,7 @@ export default function SpreadsheetLedgerPage() {
                               value={editForm.description} 
                               onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                               className="glass-input px-2 py-1 text-xs w-full"
-                              placeholder="Dinner, utilities..."
+                              placeholder="ATM withdrawal, friend payback..."
                             />
                           ) : (
                             <span className="italic text-gray-400">{item.description || '-'}</span>
@@ -440,30 +568,32 @@ export default function SpreadsheetLedgerPage() {
                       )}
 
                       {/* ACCOUNT TYPE FIELD */}
-                      <td className="py-3 px-4">
-                        {isEditing ? (
-                          <select 
-                            value={editForm.account_type} 
-                            onChange={(e) => setEditForm({ ...editForm, account_type: e.target.value })}
-                            className="glass-input px-2 py-1 text-xs w-full"
-                          >
-                            {Object.keys(ACCOUNT_COLORS).map(acc => (
-                              <option key={acc} value={acc}>{acc}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span 
-                            className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider"
-                            style={{ 
-                              backgroundColor: `${ACCOUNT_COLORS[item.account_type || 'Cash']}10`, 
-                              color: ACCOUNT_COLORS[item.account_type || 'Cash'],
-                              border: `1px solid ${ACCOUNT_COLORS[item.account_type || 'Cash']}25`
-                            }}
-                          >
-                            {item.account_type || 'Cash'}
-                          </span>
-                        )}
-                      </td>
+                      {activeTab !== 'transfers' && (
+                        <td className="py-3 px-4">
+                          {isEditing ? (
+                            <select 
+                              value={editForm.account_type} 
+                              onChange={(e) => setEditForm({ ...editForm, account_type: e.target.value })}
+                              className="glass-input px-2 py-1 text-xs w-full"
+                            >
+                              {Object.keys(ACCOUNT_COLORS).map(acc => (
+                                <option key={acc} value={acc}>{acc}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span 
+                              className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider"
+                              style={{ 
+                                backgroundColor: `${ACCOUNT_COLORS[item.account_type || 'Cash']}10`, 
+                                color: ACCOUNT_COLORS[item.account_type || 'Cash'],
+                                border: `1px solid ${ACCOUNT_COLORS[item.account_type || 'Cash']}25`
+                              }}
+                            >
+                              {item.account_type || 'Cash'}
+                            </span>
+                          )}
+                        </td>
+                      )}
 
                       {/* AMOUNT FIELD */}
                       <td className="py-3 px-4 text-right">
@@ -476,8 +606,8 @@ export default function SpreadsheetLedgerPage() {
                             required
                           />
                         ) : (
-                          <span className={`font-bold ${activeTab === 'expenses' ? 'text-white' : 'text-green-400'}`}>
-                            {activeTab === 'expenses' ? '-' : '+'} Rs. {item.amount.toLocaleString()}
+                          <span className={`font-bold ${activeTab === 'expenses' ? 'text-white' : activeTab === 'incomes' ? 'text-green-400' : 'text-blue-400'}`}>
+                            {activeTab === 'expenses' ? '-' : activeTab === 'incomes' ? '+' : '⇄'} Rs. {item.amount.toLocaleString()}
                           </span>
                         )}
                       </td>
@@ -488,7 +618,11 @@ export default function SpreadsheetLedgerPage() {
                           <div className="flex justify-center gap-1.5">
                             {/* Save Button */}
                             <button 
-                              onClick={() => activeTab === 'expenses' ? handleSaveExpense(item.id) : handleSaveIncome(item.id)}
+                              onClick={() => {
+                                if (activeTab === 'expenses') handleSaveExpense(item.id);
+                                else if (activeTab === 'incomes') handleSaveIncome(item.id);
+                                else handleSaveTransfer(item.id);
+                              }}
                               className="p-1.5 bg-green-500/10 text-green-400 border border-green-800/20 rounded hover:bg-green-600 hover:text-white transition-all cursor-pointer"
                               title="Save changes"
                             >
@@ -507,7 +641,11 @@ export default function SpreadsheetLedgerPage() {
                           <div className="flex justify-center gap-1.5">
                             {/* Edit Button */}
                             <button 
-                              onClick={() => activeTab === 'expenses' ? startEditExpense(item) : startEditIncome(item)}
+                              onClick={() => {
+                                if (activeTab === 'expenses') startEditExpense(item);
+                                else if (activeTab === 'incomes') startEditIncome(item);
+                                else startEditTransfer(item);
+                              }}
                               className="p-1.5 bg-blue-500/10 text-blue-400 border border-blue-800/10 rounded hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
                               title="Edit transaction inline"
                             >
@@ -515,7 +653,11 @@ export default function SpreadsheetLedgerPage() {
                             </button>
                             {/* Delete Button */}
                             <button 
-                              onClick={() => activeTab === 'expenses' ? handleDeleteExpense(item.id) : handleDeleteIncome(item.id)}
+                              onClick={() => {
+                                if (activeTab === 'expenses') handleDeleteExpense(item.id);
+                                else if (activeTab === 'incomes') handleDeleteIncome(item.id);
+                                else handleDeleteTransfer(item.id);
+                              }}
                               className="p-1.5 bg-red-500/10 text-red-400 border border-red-850/10 rounded hover:bg-red-600 hover:text-white transition-all cursor-pointer"
                               title="Delete transaction"
                             >

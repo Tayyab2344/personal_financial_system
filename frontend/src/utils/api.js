@@ -1,4 +1,6 @@
-const API_BASE = 'https://personal-finance-system-backend.vercel.app/api';
+const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api'
+  : 'https://personal-finance-system-backend.vercel.app/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
@@ -134,6 +136,47 @@ export const api = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to update expense');
+    return data;
+  },
+
+  // TRANSFERS
+  async getTransfers(month = null) {
+    const url = month ? `${API_BASE}/finance/transfer?month=${month}` : `${API_BASE}/finance/transfer`;
+    const res = await fetch(url, { headers: getHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch transfers');
+    return data;
+  },
+
+  async addTransfer(from_account, to_account, amount, date, description) {
+    const res = await fetch(`${API_BASE}/finance/transfer`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ from_account, to_account, amount: parseFloat(amount), date, description })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to add transfer');
+    return data;
+  },
+
+  async updateTransfer(id, from_account, to_account, amount, date, description) {
+    const res = await fetch(`${API_BASE}/finance/transfer/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ from_account, to_account, amount: parseFloat(amount), date, description })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update transfer');
+    return data;
+  },
+
+  async deleteTransfer(id) {
+    const res = await fetch(`${API_BASE}/finance/transfer/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete transfer');
     return data;
   },
 

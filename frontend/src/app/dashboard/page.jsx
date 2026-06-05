@@ -35,6 +35,13 @@ export default function DashboardOverview() {
 
   const [incomeAccount, setIncomeAccount] = useState('Cash');
   const [expenseAccount, setExpenseAccount] = useState('Cash');
+
+  // Transfer Form States
+  const [transferFromAccount, setTransferFromAccount] = useState('Bank');
+  const [transferToAccount, setTransferToAccount] = useState('Cash');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferDescription, setTransferDescription] = useState('');
+  const [transferDate, setTransferDate] = useState('');
   
   const [savingsTarget, setSavingsTarget] = useState(0);
   const [isUpdatingTarget, setIsUpdatingTarget] = useState(false);
@@ -92,6 +99,27 @@ export default function DashboardOverview() {
       triggerRefresh();
     } catch (err) {
       showFeedback(err.message || 'Failed to add expense', 'danger');
+    }
+  };
+
+  const handleAddTransfer = async (e) => {
+    e.preventDefault();
+    if (!transferAmount) return;
+    if (transferFromAccount === transferToAccount) {
+      showFeedback('Source and destination accounts must be different!', 'danger');
+      return;
+    }
+    try {
+      await api.addTransfer(transferFromAccount, transferToAccount, transferAmount, transferDate || null, transferDescription);
+      setTransferAmount('');
+      setTransferDescription('');
+      setTransferDate('');
+      setTransferFromAccount('Bank');
+      setTransferToAccount('Cash');
+      showFeedback('Transfer recorded successfully!', 'success');
+      triggerRefresh();
+    } catch (err) {
+      showFeedback(err.message || 'Failed to record transfer', 'danger');
     }
   };
 
@@ -344,7 +372,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* Transaction Entry Section */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Income form */}
         <div className="glass-card p-6 rounded-xl space-y-4">
           <div className="flex items-center gap-2 border-b border-white/5 pb-3">
@@ -486,6 +514,82 @@ export default function DashboardOverview() {
               className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
             >
               Add Expense Record
+            </button>
+          </form>
+        </div>
+
+        {/* Transfer form */}
+        <div className="glass-card p-6 rounded-xl space-y-4">
+          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+            <PlusCircle className="text-blue-400 h-5 w-5" />
+            <h3 className="text-lg font-bold text-white">Record Wallet Transfer</h3>
+          </div>
+          <form onSubmit={handleAddTransfer} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">From Account</label>
+                <select 
+                  value={transferFromAccount}
+                  onChange={(e) => setTransferFromAccount(e.target.value)}
+                  className="w-full glass-input px-3 py-2 text-sm text-gray-400"
+                >
+                  <option value="Bank">Bank Account</option>
+                  <option value="Cash">Cash</option>
+                  <option value="EasyPaisa">EasyPaisa</option>
+                  <option value="JazzCash">JazzCash</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">To Account</label>
+                <select 
+                  value={transferToAccount}
+                  onChange={(e) => setTransferToAccount(e.target.value)}
+                  className="w-full glass-input px-3 py-2 text-sm text-gray-400"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="EasyPaisa">EasyPaisa</option>
+                  <option value="JazzCash">JazzCash</option>
+                  <option value="Bank">Bank Account</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Amount (PKR)</label>
+                <input 
+                  type="number" 
+                  placeholder="Amount" 
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  className="w-full glass-input px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Date (Optional)</label>
+                <input 
+                  type="date" 
+                  value={transferDate}
+                  onChange={(e) => setTransferDate(e.target.value)}
+                  className="w-full glass-input px-3 py-2 text-sm text-gray-400"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1">Description (Optional)</label>
+              <input 
+                type="text" 
+                placeholder="ATM Withdrawal, friend payback..." 
+                value={transferDescription}
+                onChange={(e) => setTransferDescription(e.target.value)}
+                className="w-full glass-input px-3 py-2 text-sm"
+              />
+            </div>
+            <button 
+              type="submit" 
+              className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
+            >
+              Record Transfer
             </button>
           </form>
         </div>
