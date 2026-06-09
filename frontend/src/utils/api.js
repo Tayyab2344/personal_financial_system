@@ -1,3 +1,20 @@
+const originalFetch = typeof window !== 'undefined' ? window.fetch : (typeof globalThis !== 'undefined' ? globalThis.fetch : null);
+
+const customFetch = async (url, options = {}) => {
+  if (!originalFetch) return;
+  const res = await originalFetch(url, options);
+  if (res.status === 401 && !url.includes('/auth/login') && !url.includes('/auth/register')) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+  }
+  return res;
+};
+
+const fetch = customFetch;
+
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:5000/api'
   : 'https://personal-finance-system-backend.vercel.app/api';

@@ -6,9 +6,10 @@
   body {
     @apply bg-darkBg text-gray-100 font-sans antialiased overflow-x-hidden;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 40%),
+      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 40%),
+      radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 40%);
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -48,6 +49,59 @@
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 15px rgba(59, 130, 246, 0.05);
 }
 
+/* Color specific glass cards */
+.glass-card-blue {
+  background: rgba(21, 28, 44, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 10px rgba(59, 130, 246, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-blue:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+.glass-card-green {
+  background: rgba(21, 28, 44, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 10px rgba(16, 185, 129, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-green:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+.glass-card-purple {
+  background: rgba(21, 28, 44, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 10px rgba(139, 92, 246, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-purple:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+.glass-card-red {
+  background: rgba(21, 28, 44, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 10px rgba(239, 68, 68, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card-red:hover {
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(239, 68, 68, 0.15);
+}
+
 .glass-input {
   background: rgba(11, 15, 25, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -62,6 +116,61 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 0 0 8px rgba(59, 130, 246, 0.3);
 }
 
+/* Digital Credit Card Visual Simulator */
+.wallet-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+.wallet-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.wallet-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.wallet-card-chip {
+  width: 32px;
+  height: 24px;
+  background: linear-gradient(135deg, #ffd700 0%, #d4af37 50%, #b8860b 100%);
+  border-radius: 4px;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.3);
+}
+.wallet-card-chip::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  right: 5px;
+  bottom: 3px;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 2px;
+}
+
+.card-gradient-bank {
+  background: linear-gradient(135deg, rgba(76, 29, 149, 0.85) 0%, rgba(30, 27, 75, 0.95) 100%);
+}
+.card-gradient-easypaisa {
+  background: linear-gradient(135deg, rgba(4, 120, 87, 0.85) 0%, rgba(6, 78, 59, 0.95) 100%);
+}
+.card-gradient-jazzcash {
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.85) 0%, rgba(68, 64, 60, 0.95) 100%);
+}
+.card-gradient-cash {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.85) 0%, rgba(120, 53, 4, 0.95) 100%);
+}
+
 /* Animations */
 @keyframes float {
   0% { transform: translateY(0px); }
@@ -71,6 +180,15 @@
 
 .animate-float {
   animation: float 4s ease-in-out infinite;
+}
+
+/* Fade In page transition */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .glow-text-blue {
@@ -91,3 +209,4 @@
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
 }
+
