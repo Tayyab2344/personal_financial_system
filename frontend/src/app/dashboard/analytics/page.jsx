@@ -135,6 +135,8 @@ export default function ExpenseAnalyticsPage() {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'rgba(21, 28, 44, 0.95)', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }} 
+                    itemStyle={{ color: '#f1f5f9' }}
+                    labelStyle={{ color: '#94a3b8' }}
                     formatter={(value) => [`Rs. ${value.toLocaleString()}`, 'Total']}
                   />
                   <Legend 
@@ -164,6 +166,8 @@ export default function ExpenseAnalyticsPage() {
                   <YAxis stroke="#94a3b8" tick={{ fontSize: 10 }} />
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'rgba(21, 28, 44, 0.95)', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}
+                    itemStyle={{ color: '#f1f5f9' }}
+                    labelStyle={{ color: '#94a3b8' }}
                     formatter={(value) => [`Rs. ${value.toLocaleString()}`, 'Amount']}
                   />
                   <Bar dataKey="Amount" fill="#3b82f6" radius={[4, 4, 0, 0]} />
