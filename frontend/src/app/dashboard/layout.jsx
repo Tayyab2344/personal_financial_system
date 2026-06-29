@@ -15,7 +15,9 @@ import {
   Activity,
   Settings,
   Table2,
-  CalendarDays
+  CalendarDays,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -23,6 +25,7 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,6 +34,7 @@ export default function DashboardLayout({ children }) {
     } else {
       setUser(api.getUser());
       setLoading(false);
+      setIsSidebarOpen(false); // Auto-close sidebar drawer on navigation
     }
   }, [router, pathname]);
 
@@ -60,14 +64,48 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-darkBg text-gray-100 relative">
+      {/* Mobile Top Navigation Bar */}
+      <header className="w-full md:hidden flex items-center justify-between p-4 bg-slate-950/80 border-b border-white/10 fixed top-0 left-0 right-0 z-20 backdrop-blur-md">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <span className="p-1.5 bg-blue-600 rounded-lg text-white"><Activity className="h-4.5 w-4.5" /></span>
+          <span className="font-black text-md bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FinGPT</span>
+        </Link>
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5.5 w-5.5" />
+        </button>
+      </header>
+
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 md:hidden animate-fadeIn"
+        />
+      )}
+
       {/* Sidebar Panel */}
-      <aside className="w-full md:w-64 glass-card border-r border-white/10 flex flex-col justify-between p-5 md:fixed md:h-screen md:top-0 md:left-0 z-20">
+      <aside className={`fixed inset-y-0 left-0 w-64 glass-card border-r border-white/10 flex flex-col justify-between p-5 z-30 transition-transform duration-300 ease-in-out md:translate-x-0 md:fixed md:h-screen md:top-0 md:left-0 ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div className="space-y-8">
           {/* Logo banner */}
-          <Link href="/dashboard" className="flex items-center gap-2 pb-4 border-b border-white/5 cursor-pointer">
-            <span className="p-2 bg-blue-600 rounded-lg text-white shadow-glow-blue"><Activity className="h-5 w-5 animate-pulse" /></span>
-            <span className="font-black text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FinGPT</span>
-          </Link>
+          <div className="flex items-center justify-between pb-4 border-b border-white/5">
+            <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
+              <span className="p-2 bg-blue-600 rounded-lg text-white shadow-glow-blue"><Activity className="h-5 w-5 animate-pulse" /></span>
+              <span className="font-black text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FinGPT</span>
+            </Link>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 md:hidden transition-all cursor-pointer"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
           {/* User profile card */}
           <div className="p-3 bg-gradient-to-br from-slate-900/80 to-slate-950/80 rounded-xl border border-white/5 flex items-center gap-3 shadow-md hover:border-purple-500/20 transition-all duration-300">
@@ -81,7 +119,7 @@ export default function DashboardLayout({ children }) {
           </div>
 
           {/* Nav Links */}
-          <nav className="space-y-2">
+          <nav className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 scrollbar-thin">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -120,7 +158,7 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* Main page content area */}
-      <main className="flex-1 p-6 md:p-8 md:pl-72 space-y-6">
+      <main className="flex-1 p-6 pt-24 md:pt-8 md:p-8 md:pl-72 space-y-6 overflow-x-hidden">
         <div className="animate-fadeIn">
           {children}
         </div>

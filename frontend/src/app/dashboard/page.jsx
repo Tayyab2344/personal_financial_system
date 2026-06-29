@@ -444,7 +444,7 @@ export default function DashboardOverview() {
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Deposit To Wallet</label>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
                   {['Cash', 'EasyPaisa', 'JazzCash', 'Bank'].map((acc) => (
                     <button
                       key={acc}
@@ -526,7 +526,7 @@ export default function DashboardOverview() {
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Paid From Wallet</label>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
                   {['Cash', 'EasyPaisa', 'JazzCash', 'Bank'].map((acc) => (
                     <button
                       key={acc}
@@ -588,7 +588,7 @@ export default function DashboardOverview() {
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">From Account</label>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
                   {['Cash', 'EasyPaisa', 'JazzCash', 'Bank'].map((acc) => (
                     <button
                       key={acc}
@@ -608,7 +608,7 @@ export default function DashboardOverview() {
 
               <div>
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">To Account</label>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-1 p-1 bg-slate-950/60 rounded-xl border border-white/5">
                   {['Cash', 'EasyPaisa', 'JazzCash', 'Bank'].map((acc) => (
                     <button
                       key={acc}
