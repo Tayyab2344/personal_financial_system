@@ -61,6 +61,7 @@ export default function MonthlyReportPage() {
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [hideAmounts, setHideAmounts] = useState(false);
 
   // Spreadsheet sub-tab
   const [sheetTab, setSheetTab] = useState('expenses');
@@ -72,6 +73,20 @@ export default function MonthlyReportPage() {
   useEffect(() => {
     fetchMonthData();
   }, [monthKey]);
+
+  useEffect(() => {
+    const checkPrivacy = () => {
+      setHideAmounts(localStorage.getItem('hideAmounts') === 'true');
+    };
+    checkPrivacy();
+    window.addEventListener('privacyToggle', checkPrivacy);
+    return () => window.removeEventListener('privacyToggle', checkPrivacy);
+  }, []);
+
+  const formatVal = (val, prefix = 'Rs. ') => {
+    if (hideAmounts) return '••••';
+    return `${prefix}${Number(val || 0).toLocaleString()}`;
+  };
 
   const fetchMonthData = async () => {
     try {
@@ -317,7 +332,7 @@ export default function MonthlyReportPage() {
           </div>
           <div>
             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Income</p>
-            <h3 className="text-xl font-black text-white mt-0.5">Rs. {totalIncome.toLocaleString()}</h3>
+            <h3 className="text-xl font-black text-white mt-0.5">{formatVal(totalIncome)}</h3>
             <p className="text-[9px] text-gray-500">{incomes.length} entries</p>
           </div>
         </div>
@@ -329,7 +344,7 @@ export default function MonthlyReportPage() {
           </div>
           <div>
             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Expenses</p>
-            <h3 className="text-xl font-black text-white mt-0.5">Rs. {totalExpenses.toLocaleString()}</h3>
+            <h3 className="text-xl font-black text-white mt-0.5">{formatVal(totalExpenses)}</h3>
             <p className="text-[9px] text-gray-500">{expenses.length} entries</p>
           </div>
         </div>
@@ -348,7 +363,7 @@ export default function MonthlyReportPage() {
           <div>
             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Net Savings</p>
             <h3 className={`text-xl font-black mt-0.5 ${netSavings >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {netSavings >= 0 ? '+' : ''}Rs. {netSavings.toLocaleString()}
+              {netSavings >= 0 ? '+' : ''}{formatVal(netSavings)}
             </h3>
             <p className="text-[9px] text-gray-500">{((netSavings / (totalIncome || 1)) * 100).toFixed(1)}% of income</p>
           </div>
@@ -361,7 +376,7 @@ export default function MonthlyReportPage() {
           </div>
           <div>
             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Transfers</p>
-            <h3 className="text-xl font-black text-white mt-0.5">Rs. {totalTransfers.toLocaleString()}</h3>
+            <h3 className="text-xl font-black text-white mt-0.5">{formatVal(totalTransfers)}</h3>
             <p className="text-[9px] text-gray-500">{transfers.length} moves</p>
           </div>
         </div>
@@ -374,7 +389,7 @@ export default function MonthlyReportPage() {
           <div>
             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Avg/Day</p>
             <h3 className="text-xl font-black text-white mt-0.5">
-              Rs. {(totalExpenses / (new Date(selectedYear, selectedMonth + 1, 0).getDate())).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              {formatVal((totalExpenses / (new Date(selectedYear, selectedMonth + 1, 0).getDate())).toFixed(0))}
             </h3>
             <p className="text-[9px] text-gray-500">{new Date(selectedYear, selectedMonth + 1, 0).getDate()} days</p>
           </div>
@@ -599,7 +614,7 @@ export default function MonthlyReportPage() {
                           {new Date(exp.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </p>
                       </div>
-                      <span className="text-sm font-black text-white">Rs. {exp.amount.toLocaleString()}</span>
+                      <span className="text-sm font-black text-white">{formatVal(exp.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -821,7 +836,7 @@ export default function MonthlyReportPage() {
                           <span className={`font-bold ${
                             sheetTab === 'expenses' ? 'text-red-400' : sheetTab === 'incomes' ? 'text-green-400' : 'text-purple-400'
                           }`}>
-                            {sheetTab === 'expenses' ? '-' : sheetTab === 'incomes' ? '+' : '⇄'} Rs. {item.amount.toLocaleString()}
+                            {sheetTab === 'expenses' ? '-' : sheetTab === 'incomes' ? '+' : '⇄'} {formatVal(item.amount)}
                           </span>
                         </td>
                       </tr>
@@ -837,7 +852,7 @@ export default function MonthlyReportPage() {
                         <span className={`font-black text-lg ${
                           sheetTab === 'expenses' ? 'text-red-400' : sheetTab === 'incomes' ? 'text-green-400' : 'text-purple-400'
                         }`}>
-                          Rs. {(sheetTab === 'expenses' ? totalExpenses : sheetTab === 'incomes' ? totalIncome : totalTransfers).toLocaleString()}
+                          {formatVal(sheetTab === 'expenses' ? totalExpenses : sheetTab === 'incomes' ? totalIncome : totalTransfers)}
                         </span>
                       </td>
                     </tr>

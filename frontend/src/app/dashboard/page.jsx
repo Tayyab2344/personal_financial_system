@@ -48,6 +48,7 @@ export default function DashboardOverview() {
 
   const [message, setMessage] = useState({ text: '', type: '' });
   const [user, setUser] = useState(null);
+  const [hideAmounts, setHideAmounts] = useState(false);
 
   const triggerRefresh = () => {
     setRefreshCount(prev => prev + 1);
@@ -56,7 +57,19 @@ export default function DashboardOverview() {
   useEffect(() => {
     fetchSummary();
     setUser(api.getUser());
+
+    const checkPrivacy = () => {
+      setHideAmounts(localStorage.getItem('hideAmounts') === 'true');
+    };
+    checkPrivacy();
+    window.addEventListener('privacyToggle', checkPrivacy);
+    return () => window.removeEventListener('privacyToggle', checkPrivacy);
   }, [refreshCount]);
+
+  const formatVal = (val, prefix = 'Rs. ') => {
+    if (hideAmounts) return '••••';
+    return `${prefix}${Number(val || 0).toLocaleString()}`;
+  };
 
   const fetchSummary = async () => {
     try {
@@ -206,18 +219,18 @@ export default function DashboardOverview() {
             )}
             <div className="space-y-1">
               <h1 className="text-4xl md:text-6xl font-black text-white leading-none tracking-tight">
-                Rs. {Math.max(0, summary?.dailySpendingAllowance || 0).toLocaleString()} <span className="text-sm font-semibold text-gray-400 uppercase tracking-widest">/ day</span>
+                {formatVal(Math.max(0, summary?.dailySpendingAllowance || 0))} <span className="text-sm font-semibold text-gray-400 uppercase tracking-widest">/ day</span>
               </h1>
               {isDeficit ? (
                 <p className="text-gray-400 text-xs max-w-xl leading-relaxed">
                   You have exceeded your available spending budget by 
-                  <span className="text-red-400 font-bold mx-1">Rs. {deficitAmount.toLocaleString()}</span> 
+                  <span className="text-red-400 font-bold mx-1">{formatVal(deficitAmount)}</span> 
                   with <span className="text-white font-bold">{summary?.remainingDays} days</span> left in this month. Consider reducing non-essential expenses.
                 </p>
               ) : (
                 <p className="text-gray-400 text-xs max-w-xl leading-relaxed">
                   This is your safe daily limit based on your remaining budget of 
-                  <span className="text-white font-bold mx-1">Rs. {summary?.budgetRemaining?.toLocaleString()}</span> 
+                  <span className="text-white font-bold mx-1">{formatVal(summary?.budgetRemaining)}</span> 
                   and <span className="text-white font-bold">{summary?.remainingDays} days</span> left in this month.
                 </p>
               )}
@@ -228,7 +241,7 @@ export default function DashboardOverview() {
           <div className="glass-card p-5 rounded-2xl border border-white/5 space-y-4 w-full lg:w-96 shadow-lg bg-slate-950/40">
             <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
               <span className="text-gray-400">Monthly Savings Target</span>
-              <span className="text-blue-400 text-xs font-bold">Rs. {savingsTarget?.toLocaleString()}</span>
+              <span className="text-blue-400 text-xs font-bold">{formatVal(savingsTarget)}</span>
             </div>
             <input 
               type="range" 
@@ -259,7 +272,7 @@ export default function DashboardOverview() {
           </div>
           <div>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Income</p>
-            <h3 className="text-2xl font-black text-white mt-1">Rs. {summary?.totalIncome?.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-white mt-1">{formatVal(summary?.totalIncome)}</h3>
           </div>
         </div>
 
@@ -270,7 +283,7 @@ export default function DashboardOverview() {
           </div>
           <div>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Expenses Logged</p>
-            <h3 className="text-2xl font-black text-white mt-1">Rs. {summary?.totalExpenses?.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-white mt-1">{formatVal(summary?.totalExpenses)}</h3>
           </div>
         </div>
 
@@ -288,7 +301,7 @@ export default function DashboardOverview() {
             <h3 className={`text-2xl font-black mt-1 transition-all duration-300 ${
               isDeficit ? 'text-red-400' : 'text-white'
             }`}>
-              Rs. {Math.max(0, summary?.budgetRemaining || 0).toLocaleString()}
+              {formatVal(Math.max(0, summary?.budgetRemaining || 0))}
             </h3>
           </div>
         </div>
@@ -300,12 +313,15 @@ export default function DashboardOverview() {
           </div>
           <div className="w-full pr-2">
             <div className="flex justify-between items-center mb-1">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Goal Progress</p>
-              <span className="text-lg font-black text-purple-400">{summary?.savingsProgress}%</span>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Savings</p>
+              <span className="text-lg font-black text-purple-400">{summary?.savingsProgress || 0}%</span>
             </div>
-            <div className="w-full bg-slate-950 rounded-full h-2 mt-1.5 border border-white/5">
+            <p className="text-xs text-white font-bold mb-1 leading-none">
+              {formatVal(summary?.currentSavings)} / {formatVal(summary?.targetSavings)}
+            </p>
+            <div className="w-full bg-slate-950 rounded-full h-1.5 mt-1 border border-white/5">
               <div 
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full shadow-[0_0_10px_rgba(139,92,246,0.5)]" 
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-1.5 rounded-full shadow-[0_0_10px_rgba(139,92,246,0.5)]" 
                 style={{ width: `${summary?.savingsProgress || 0}%` }}
               ></div>
             </div>
@@ -325,7 +341,7 @@ export default function DashboardOverview() {
           <div className="px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-xl w-fit shadow-glow-blue flex items-center gap-3">
             <div>
               <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-widest leading-none">Total Net Balance</span>
-              <span className="text-xl font-black text-white mt-0.5 block leading-none">Rs. {summary?.totalBalance?.toLocaleString() || '0'}</span>
+              <span className="text-xl font-black text-white mt-0.5 block leading-none">{formatVal(summary?.totalBalance || 0)}</span>
             </div>
           </div>
         </div>
@@ -336,7 +352,7 @@ export default function DashboardOverview() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-white/60 font-black">Cash Wallet</p>
-                <h4 className="text-xl font-black mt-1">Rs. {summary?.accountBalances?.Cash?.toLocaleString() || '0'}</h4>
+                <h4 className="text-xl font-black mt-1">{formatVal(summary?.accountBalances?.Cash || 0)}</h4>
               </div>
               <Coins className="h-6 w-6 text-white/40" />
             </div>
@@ -354,7 +370,7 @@ export default function DashboardOverview() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-white/60 font-black">EasyPaisa</p>
-                <h4 className="text-xl font-black mt-1">Rs. {summary?.accountBalances?.EasyPaisa?.toLocaleString() || '0'}</h4>
+                <h4 className="text-xl font-black mt-1">{formatVal(summary?.accountBalances?.EasyPaisa || 0)}</h4>
               </div>
               <Smartphone className="h-6 w-6 text-white/40" />
             </div>
@@ -372,7 +388,7 @@ export default function DashboardOverview() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-white/60 font-black">JazzCash</p>
-                <h4 className="text-xl font-black mt-1">Rs. {summary?.accountBalances?.JazzCash?.toLocaleString() || '0'}</h4>
+                <h4 className="text-xl font-black mt-1">{formatVal(summary?.accountBalances?.JazzCash || 0)}</h4>
               </div>
               <CreditCard className="h-6 w-6 text-white/40" />
             </div>
@@ -390,7 +406,7 @@ export default function DashboardOverview() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-white/60 font-black">Bank Account</p>
-                <h4 className="text-xl font-black mt-1">Rs. {summary?.accountBalances?.Bank?.toLocaleString() || '0'}</h4>
+                <h4 className="text-xl font-black mt-1">{formatVal(summary?.accountBalances?.Bank || 0)}</h4>
               </div>
               <Landmark className="h-6 w-6 text-white/40" />
             </div>

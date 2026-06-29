@@ -17,7 +17,9 @@ import {
   Table2,
   CalendarDays,
   Menu,
-  X
+  X,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -26,6 +28,7 @@ export default function DashboardLayout({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [hideAmounts, setHideAmounts] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -36,7 +39,17 @@ export default function DashboardLayout({ children }) {
       setLoading(false);
       setIsSidebarOpen(false); // Auto-close sidebar drawer on navigation
     }
+
+    const stored = localStorage.getItem('hideAmounts') === 'true';
+    setHideAmounts(stored);
   }, [router, pathname]);
+
+  const togglePrivacy = () => {
+    const nextVal = !hideAmounts;
+    setHideAmounts(nextVal);
+    localStorage.setItem('hideAmounts', String(nextVal));
+    window.dispatchEvent(new Event('privacyToggle'));
+  };
 
   const handleLogout = () => {
     api.logout();
@@ -70,13 +83,22 @@ export default function DashboardLayout({ children }) {
           <span className="p-1.5 bg-blue-600 rounded-lg text-white"><Activity className="h-4.5 w-4.5" /></span>
           <span className="font-black text-md bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FinGPT</span>
         </Link>
-        <button 
-          onClick={() => setIsSidebarOpen(true)}
-          className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-all cursor-pointer"
-          aria-label="Open menu"
-        >
-          <Menu className="h-5.5 w-5.5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={togglePrivacy}
+            className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+            title={hideAmounts ? "Show financial details" : "Mask sensitive amounts"}
+          >
+            {hideAmounts ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5.5 w-5.5" />
+          </button>
+        </div>
       </header>
 
       {/* Mobile Sidebar Overlay Backdrop */}
@@ -107,15 +129,24 @@ export default function DashboardLayout({ children }) {
             </button>
           </div>
 
-          {/* User profile card */}
-          <div className="p-3 bg-gradient-to-br from-slate-900/80 to-slate-950/80 rounded-xl border border-white/5 flex items-center gap-3 shadow-md hover:border-purple-500/20 transition-all duration-300">
-            <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/10 text-purple-400 border border-purple-500/30 rounded-lg shadow-inner">
-              <User className="h-5 w-5" />
+          {/* User profile card with privacy toggle */}
+          <div className="p-3 bg-gradient-to-br from-slate-900/80 to-slate-950/80 rounded-xl border border-white/5 flex items-center justify-between gap-2 shadow-md hover:border-purple-500/20 transition-all duration-300">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/10 text-purple-400 border border-purple-500/30 rounded-lg shadow-inner flex-shrink-0">
+                <User className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-black text-white truncate">{user?.name || "Tayyab Atiq"}</h4>
+                <p className="text-[10px] text-gray-400 font-semibold truncate leading-none mt-0.5">{user?.email || "ranatayyab941@gmail.com"}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h4 className="text-sm font-black text-white truncate">{user?.name || "Tayyab Atiq"}</h4>
-              <p className="text-[10px] text-gray-400 font-semibold truncate leading-none mt-0.5">{user?.email || "ranatayyab941@gmail.com"}</p>
-            </div>
+            <button 
+              onClick={togglePrivacy}
+              className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-all cursor-pointer flex-shrink-0"
+              title={hideAmounts ? "Show financial details" : "Mask sensitive amounts"}
+            >
+              {hideAmounts ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
 
           {/* Nav Links */}
