@@ -114,42 +114,61 @@ export default function ExpenseAnalyticsPage() {
         {/* Category Breakdown (Pie) */}
         <div className="glass-card p-6 rounded-xl space-y-4">
           <h3 className="text-lg font-bold text-white border-b border-white/5 pb-2">Category Breakdown</h3>
-          <div className="h-64 flex items-center justify-center">
-            {categoryData.length === 0 ? (
+          {categoryData.length === 0 ? (
+            <div className="flex items-center justify-center h-64">
               <p className="text-gray-400 text-sm">No expense data available</p>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name] || '#64748b'} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'rgba(21, 28, 44, 0.95)', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }} 
-                    itemStyle={{ color: '#f1f5f9' }}
-                    labelStyle={{ color: '#94a3b8' }}
-                    formatter={(value) => [`Rs. ${value.toLocaleString()}`, 'Total']}
-                  />
-                  <Legend 
-                    layout="horizontal" 
-                    verticalAlign="bottom" 
-                    align="center"
-                    iconSize={10}
-                    formatter={(value) => <span className="text-xs text-gray-400 font-semibold">{value}</span>}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name] || '#64748b'} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'rgba(21, 28, 44, 0.95)', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }} 
+                      itemStyle={{ color: '#f1f5f9' }}
+                      labelStyle={{ color: '#94a3b8' }}
+                      formatter={(value) => [`Rs. ${value.toLocaleString()}`, 'Total']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {(() => {
+                  const totalCatExpenses = categoryData.reduce((sum, item) => sum + item.value, 0);
+                  const formatValLocal = (val) => "Rs. " + Number(val || 0).toLocaleString();
+                  return categoryData.map((entry, idx) => {
+                    const pct = totalCatExpenses > 0 ? ((entry.value / totalCatExpenses) * 100).toFixed(1) : 0;
+                    const color = CATEGORY_COLORS[entry.name] || '#64748b';
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-xs hover:bg-white/10 transition-all font-sans">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full block" style={{ backgroundColor: color }}></span>
+                          <span className="font-bold text-gray-200">{entry.name}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-black text-white block">{formatValLocal(entry.value)}</span>
+                          <span className="text-[10px] text-gray-400 font-semibold">{pct}% of total</span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Daily Spending Trend (Bar) */}
